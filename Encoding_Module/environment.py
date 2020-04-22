@@ -1,3 +1,4 @@
+import re
 import itertools
 
 
@@ -40,32 +41,83 @@ class Environment:
                         objectTypes.append(predicate[idx + 1 + (i + 1)])
                         break
 
-        # Create a list of lists where each list contains all the objects of one type
+        # Get all objects of each type of object in the predicate parameters
+        poolOfObjects = self.get_pool_of_objects(objectTypes)
 
-        pool_of_objects = []
-        for typ in objectTypes:
-            for key, value in self.types.items():
-                if key == typ and isinstance(value, list):  # Type doesn't have subtypes
-                    pool_of_objects.append(value)
-                    break
-                elif key == typ:  # Add all objects of all subtypes of the matching type
-                    objs = []
-                    for k, v in value.items():
-                        objs += v
-                    pool_of_objects.append(objs)
-                    break
-                if isinstance(value, dict):  # Search typ within the nested dictionary
-                    for k, v in value.items():
-                        if typ == k:
-                            pool_of_objects.append(v)
-                            break
-
-        # Add all combination of the objects that a predicate can have to the state dictionary (state encoding)
-
-        for tup in list(itertools.product(*pool_of_objects)):
+        # Add all combinations of the objects that a predicate can have to the state dictionary (state encoding)
+        for tup in list(itertools.product(*poolOfObjects)):
             objs = ""
             for elem in tup: objs += (" " + elem)
             self.state[f"({name}{objs})"] = 0  # Add each term to the dictionary initialized to 0
 
-    def get_available_actions(self, ):
-        pass
+    # Return a set of all the possible actions that exist in this environment
+    def get_all_actions(self):
+        allActions = set([])
+
+        for action, definition in self.actionsSchemas.items():
+            # Get all objects of each type of object in the action parameters
+            poolOfObjects = self.get_pool_of_objects([param[1] for param in definition["parameters"]])
+
+            # Add all combinations of the objects that the current action can have as parameters to the set containing
+            # all possible actions in this environment
+            for tup in list(itertools.product(*poolOfObjects)):
+                params = ""
+                for elem in tup: params += (" " + elem)
+                allActions.add(f"({action}{params})")
+
+        return allActions
+
+    # Returns whether it's possible to take this action according to the current state
+    def is_valid(self, action):
+        action = list(filter(lambda elm: elm != '', action.strip().split(' ')))
+        actionName = action[0].replace('(', '')
+
+        # Match parameters with the param. names in the current action
+        translation = {}
+        for idx, param in enumerate(self.actionsSchemas[actionName]["parameters"]):
+            translation[re.escape(param[0])] = action[idx+1].replace(')', '')
+
+        # Check if all preconditions of the action are satisfied
+        for pred in self.actionsSchemas[actionName]["precondition"]:
+            targetValue = 0 if pred[0] == '!' else 1
+            pattern = re.compile("|".join(translation.keys()))
+            prop = pattern.sub(lambda m: translation[re.escape(m.group(0))], pred)
+
+            if prop not in self.state and prop not in self.immutableProps:
+                return False
+            if prop in self.state and self.state[prop] != targetValue:
+                return False
+
+        return True
+
+    # Returns a list of lists where each list contains all the objects of each type in listOfObjectTypes
+    def get_pool_of_objects(self, listOfObjectTypes):
+        poolOfObjects = []
+
+        for typ in listOfObjectTypes:
+            for key, value in self.types.items():
+
+                if not value: continue
+
+                # Type doesn't have subtypes
+                elif key == typ and isinstance(value, list):
+                    poolOfObjects.append(value)
+                    break
+
+                # Add all objects of all subtypes of the matching type
+                elif key == typ:
+                    objs = []
+                    for k, v in value.items():
+                        objs += v
+                    poolOfObjects.append(objs)
+                    break
+
+                # Search typ within the nested dictionary
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        if not v: continue
+                        elif typ == k:
+                            poolOfObjects.append(v)
+                            break
+
+        return poolOfObjects

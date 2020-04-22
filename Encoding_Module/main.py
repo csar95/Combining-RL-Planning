@@ -61,3 +61,13 @@ env.initialize_state(objDependentPreds, objIndependentPreds, init_state)
 colorPrint("\n------- STATE ENCODING -------", CYAN)
 print(env.state)
 print(len(env.state))
+
+colorPrint("\n------- ALL ACTIONS IN THE ENVIRONMENT -------", CYAN)
+# This will be useful to for form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
+allActions = env.get_all_actions()
+# print(allActions)
+print(len(allActions))
+
+print(env.is_valid("(board p7 slow0-0 n1 n2 n8)"))
+
+print(env.is_valid("(board p9 slow0-0 n2 n0 n1)"))
