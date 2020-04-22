@@ -77,8 +77,8 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
                     else:
                         immutablePreds.add(re.sub("[()]", "", line.strip()).strip())
 
-        #
-        # ':action'
+        # The content of ':parameters', ':precondition' and ':effect' need to be all in one line
+        # ':action' needs to be in one line along with the action name. The same with the final ')'
 
         actionName = ""
 
@@ -93,22 +93,22 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
             elif not actionName or not line.strip():
                 continue
 
-            # TODO: INCLUDE OBJECTS AS WELL
-
+            # Add parameters to the current action schema
             elif ":parameters" in line.strip():
-                paremeters = list(filter(lambda elm: elm != '', line.strip().split(" ")))
+                parameters = list(filter(lambda elm: elm != '', line.strip().split(" ")))
 
                 objectTypes = []
-                for idx, elem in enumerate(paremeters):
+                for idx, elem in enumerate(parameters):
                     if "?" in elem:  # Elem is an object --> Check the type
-                        for i, x in enumerate(paremeters[(idx + 1):]):
+                        for i, x in enumerate(parameters[(idx + 1):]):
                             if x == "-":
                                 objectTypes.append((re.sub("[()]", "", elem),
-                                                    re.sub("[()]", "", paremeters[idx + 1 + (i + 1)])))
+                                                    re.sub("[()]", "", parameters[idx + 1 + (i + 1)])))
                                 break
 
                 env.actionsSchemas[actionName]["parameters"] = objectTypes
 
+            # Add the predicates in the precondition to the current action schema
             elif ":precondition" in line.strip():
                 precondsPreds = []
 
@@ -131,6 +131,7 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
 
                 env.actionsSchemas[actionName]["precondition"] = precondsPreds
 
+            # Add the predicates in the effect to the current action schema
             elif ":effect" in line.strip():
                 effsPreds = []
 
