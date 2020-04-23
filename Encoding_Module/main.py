@@ -1,3 +1,5 @@
+import time
+
 from fileIO import *
 from environment import *
 
@@ -64,10 +66,19 @@ print(len(env.state))
 
 colorPrint("\n------- ALL ACTIONS IN THE ENVIRONMENT -------", CYAN)
 # This will be useful to for form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
-allActions = env.get_all_actions()
-# print(allActions)
-print(len(allActions))
+start_time = time.time()
+env.get_all_actions()
+colorPrint(str(time.time() - start_time), YELLOW)
+# print(env.allActions)
+print(len(env.allActions))
 
-print(env.is_valid("(board p7 slow0-0 n1 n2 n8)"))
+print(env.is_legal("(board p7 slow0-0 n1 n2 n8)"))
 
-print(env.is_valid("(board p9 slow0-0 n2 n0 n1)"))
+print(env.is_legal("(board p9 slow0-0 n2 n0 n1)"))
+
+start_time = time.time()
+legalActionsAtInitialState = env.get_legal_actions()
+colorPrint(str(time.time() - start_time), YELLOW)
+
+print(legalActionsAtInitialState)
+print(len(legalActionsAtInitialState))

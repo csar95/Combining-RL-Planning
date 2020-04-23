@@ -7,6 +7,10 @@ class Environment:
     def __init__(self):
         self.types = {}
         self.actionsSchemas = {}
+
+        # allActions is a dictionary of this type --> '(board p7 slow0-0 n1 n2 n8)': {'(lift-at slow0-0 n1)': 1, '(passenger-at p7 n1)': 1, '(passengers slow0-0 n2)': 1, '(next n2 n8)': 1, '(can-hold slow0-0 n8)': 1}
+        self.allActions = {}
+
         self.immutableProps = set([])
         self.state = {}
 
@@ -52,8 +56,6 @@ class Environment:
 
     # Return a set of all the possible actions that exist in this environment
     def get_all_actions(self):
-        allActions = set([])
-
         for action, definition in self.actionsSchemas.items():
             # Get all objects of each type of object in the action parameters
             poolOfObjects = self.get_pool_of_objects([param[1] for param in definition["parameters"]])
@@ -63,32 +65,21 @@ class Environment:
             for tup in list(itertools.product(*poolOfObjects)):
                 params = ""
                 for elem in tup: params += (" " + elem)
-                allActions.add(f"({action}{params})")
 
-        return allActions
+                # Match parameters in tup with the param. names in the current action
+                translation = {}
+                for idx, param in enumerate(definition["parameters"]):
+                    translation[re.escape(param[0])] = tup[idx]
 
-    # Returns whether it's possible to take this action according to the current state
-    def is_valid(self, action):
-        action = list(filter(lambda elm: elm != '', action.strip().split(' ')))
-        actionName = action[0].replace('(', '')
+                # Get preconditions of the current action with the parameters substituted
+                preconditions = {}
+                for pred in definition["precondition"]:
+                    targetValue = 0 if pred[0] == '!' else 1
 
-        # Match parameters with the param. names in the current action
-        translation = {}
-        for idx, param in enumerate(self.actionsSchemas[actionName]["parameters"]):
-            translation[re.escape(param[0])] = action[idx+1].replace(')', '')
+                    pattern = re.compile("|".join(translation.keys()))
+                    preconditions[ pattern.sub(lambda m: translation[re.escape(m.group(0))], pred) ] = targetValue
 
-        # Check if all preconditions of the action are satisfied
-        for pred in self.actionsSchemas[actionName]["precondition"]:
-            targetValue = 0 if pred[0] == '!' else 1
-            pattern = re.compile("|".join(translation.keys()))
-            prop = pattern.sub(lambda m: translation[re.escape(m.group(0))], pred)
-
-            if prop not in self.state and prop not in self.immutableProps:
-                return False
-            if prop in self.state and self.state[prop] != targetValue:
-                return False
-
-        return True
+                self.allActions[f"({action}{params})"] = preconditions
 
     # Returns a list of lists where each list contains all the objects of each type in listOfObjectTypes
     def get_pool_of_objects(self, listOfObjectTypes):
@@ -121,3 +112,17 @@ class Environment:
                             break
 
         return poolOfObjects
+
+    def get_legal_actions(self):
+        return set(filter(self.is_legal, self.allActions.keys()))
+
+    # Return True if the action preconditions are satisfied in the current state
+    def is_legal(self, action):
+        for pre, targetValue in self.allActions[action].items():
+
+            if pre not in self.state and pre not in self.immutableProps:
+                return False
+            if pre in self.state and self.state[pre] != targetValue:
+                return False
+
+        return True

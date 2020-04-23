@@ -4,6 +4,9 @@ import sys
 from utils import *
 
 
+# It does not accept a domain with or, when, forall statements. Only not is allowed
+# All objects must have a type.
+# All predicates parameters must have a type
 def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutablePreds, env):
     with open(filePath) as fp:
         Lines = fp.readlines()
@@ -59,7 +62,7 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
             else:
                 answered = False
                 while not answered:
-                    # todo: THIS INFO CAN BE OBTAINED IF THE PREDICATE DOESN'T APPEAR IN ANY ACTION EFFECT
+                    # THIS INFO COULD BE OBTAINED IF THE PREDICATE DOESN'T APPEAR IN ANY ACTION EFFECT
                     answer = input(f'Is "{line.strip()}" an immutable predicate? [y/N]\n').lower()
 
                     if answer == "":
@@ -174,7 +177,7 @@ def read_problem_file(filePath, immutablePreds, env):
 
             elif not foundObjects or not line.strip():
                 continue
-            # TODO: SEE CASE WHEN OBJECTS DON'T HAVE TYPE. WE MIGHT NOT ALLOW THIS SCENERY
+
             else:
                 typ = ""
 
