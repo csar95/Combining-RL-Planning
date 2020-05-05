@@ -30,7 +30,7 @@ class Environment:
 
         # Reading problem file. Detect the immutable properties and the type of each object
         colorPrint("\nReading problem file...", MAGENTA)
-        self.init_state = read_problem_file(self.problemPath, self)
+        self.init_state, self.goal_state = read_problem_file(self.problemPath, self)
 
         # Add the dependent predicates (non-immutable) to the state
         for pred in self.objDependentPreds:
@@ -146,11 +146,14 @@ class Environment:
 
         return poolOfObjects
 
+    '''
+    Returns all legal actions from the current state
+    '''
     def get_legal_actions(self):
         return set(filter(self.is_legal, self.allActions.keys()))
 
     '''
-    Return True if the action preconditions are satisfied in the current state
+    Returns whether the action preconditions are satisfied in the current state or not
     '''
     def is_legal(self, action):
         for pre, targetValue in self.allActions[action]["precondition"].items():
@@ -158,6 +161,17 @@ class Environment:
             if pre not in self.state and pre not in self.immutableProps:
                 return False
             if pre in self.state and self.state[pre] != targetValue:
+                return False
+
+        return True
+
+    '''
+    Returns whether the current state satisfies the goal state or not
+    '''
+    def is_done(self):
+        for pred in self.goal_state:
+            targetValue = 0 if pred[0] == '!' else 1
+            if self.state[pred] != targetValue:
                 return False
 
         return True
@@ -177,9 +191,9 @@ class Environment:
     def sample(self):
         return random.sample(set(filter(self.is_legal, self.allActions.keys())), 1)[0]
 
-    # TODO: Return newObservation, reward, done
+    # TODO: Return reward
     def step(self, action):
         for eff, value in self.allActions[action]["effect"].items():
             self.state[eff] = value
 
-        return self.state, None, False
+        return self.state, None, self.is_done()

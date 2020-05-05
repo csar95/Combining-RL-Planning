@@ -14,8 +14,10 @@ def read_domain_file(filePath, env):
         foundTypes = False
         foundPredicates = False
 
-        # Types need to be in different lines. Subtypes need to be all in the same line as the type.
-        # ':types' needs to be alone in one line. The same with the final ')'
+        '''
+        Types need to be in different lines. Subtypes need to be all in the same line as the type.
+        ':types' needs to be alone in one line. The same with the final ')'
+        '''
 
         for line in Lines:
             if foundTypes and line.strip() == ")":
@@ -43,8 +45,10 @@ def read_domain_file(filePath, env):
                     elif t != "-":
                         env.types[f"{parentType}"][f"{t}"] = []
 
-        # It only accepts one predicate per line
-        # ':predicates' needs to be alone in one line. The same with the final ')'
+        '''
+        It only accepts one predicate per line
+        ':predicates' needs to be alone in one line. The same with the final ')'
+        '''
 
         for line in Lines:
             if foundPredicates and line.strip() == ")":
@@ -81,8 +85,10 @@ def read_domain_file(filePath, env):
                     else:
                         env.immutablePreds.add(re.sub("[()]", "", line.strip()).strip())
 
-        # The content of ':parameters', ':precondition' and ':effect' need to be all in one line
-        # ':action' needs to be in one line along with the action name. The same with the final ')'
+        '''
+        The content of ':parameters', ':precondition' and ':effect' need to be all in one line
+        ':action' needs to be in one line along with the action name. The same with the final ')'
+        '''
 
         actionName = ""
 
@@ -163,10 +169,13 @@ def read_problem_file(filePath, env):
         Lines = fp.readlines()
         foundObjects = False
         foundInit = False
+        foundGoal = False
 
-        # It only accepts objects of one type per line
-        # A type with subtypes cannot have objects assigned. Objects need to be assigned to the subtypes
-        # ':objects' needs to be alone in one line. The same with the final ')'
+        '''
+        It only accepts objects of one type per line
+        A type with subtypes cannot have objects assigned. Objects need to be assigned to the subtypes
+        ':objects' needs to be alone in one line. The same with the final ')'
+        '''
 
         for line in Lines:
             if foundObjects and line.strip() == ")":
@@ -192,8 +201,10 @@ def read_problem_file(filePath, env):
                         else:
                             env.types[f"{parentType}"][f"{typ}"].append(obj)
 
-        # It's okay to define multiple properties in the same line
-        # ':init' needs to be alone in one line. The same with the final ')'
+        '''
+        It's okay to define multiple properties in the same line
+        ':init' needs to be alone in one line. The same with the final ')'
+        '''
 
         init_state = []
 
@@ -215,7 +226,38 @@ def read_problem_file(filePath, env):
                     else:
                         init_state.append(prop.strip())
 
-    return init_state
+        '''
+        It's okay to define multiple properties in the same line
+        There's need to be a space after 'not'
+        ':goal' needs to be alone in one line. The same with the final '))' and the keyword 'and'
+        '''
+
+        goal_state = []
+
+        for line in Lines:
+            if foundGoal and line.strip() == "))":
+                break
+
+            elif ":goal" in line.strip():
+                foundGoal = True
+
+            elif not foundGoal or not line.strip() or "and" in line.strip():
+                continue
+
+            else:
+                # For each property in current line add it to the goal state
+                for prop in list(re.findall(r"\((.*?)\)", line.strip())):
+
+                    propElems = list(filter(lambda elem: elem != '' and elem != '(' and elem != ')', prop.strip().split(" ")))
+
+                    bit = '!(' if "not" in propElems[0] else '('
+                    for idx, x in enumerate(propElems):
+                        bit += '' if "not" in x else (x.strip('()') if bit == '(' or bit == '!(' else ' ' + x.strip('()'))
+                    bit += ')'
+
+                    goal_state.append(bit)
+
+    return init_state, goal_state
 
 '''
 Checks whether the prop_name exists in any of the predicates in the 2nd parameter

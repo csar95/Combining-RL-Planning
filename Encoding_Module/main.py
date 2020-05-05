@@ -30,6 +30,9 @@ print(env.immutableProps)
 colorPrint("\n------- OBJECTS & TYPES -------", CYAN)
 print(env.types)
 
+colorPrint("\n------- GOAL STATE -------", CYAN)
+print(env.goal_state)
+
 # ------------------------------------------------------------------------ #
 
 colorPrint("\n------- STATE ENCODING -------", CYAN)
