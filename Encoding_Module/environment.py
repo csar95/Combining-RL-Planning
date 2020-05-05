@@ -87,20 +87,30 @@ class Environment:
                 params = ""
                 for elem in tup: params += (" " + elem)
 
+                self.allActions[f"({action}{params})"] = {}
+
                 # Match parameters in tup with the param. names in the current action
                 translation = {}
                 for idx, param in enumerate(definition["parameters"]):
                     translation[re.escape(param[0])] = tup[idx]
 
+                pattern = re.compile("|".join(translation.keys()))
+
                 # Get preconditions of the current action with the parameters substituted
                 preconditions = {}
                 for pred in definition["precondition"]:
                     targetValue = 0 if pred[0] == '!' else 1
+                    preconditions[ pattern.sub(lambda m: translation[re.escape(m.group(0))], pred.lstrip('!')) ] = targetValue
 
-                    pattern = re.compile("|".join(translation.keys()))
-                    preconditions[ pattern.sub(lambda m: translation[re.escape(m.group(0))], pred) ] = targetValue
+                self.allActions[f"({action}{params})"]["precondition"] = preconditions
 
-                self.allActions[f"({action}{params})"] = preconditions
+                # Get effects of the current action with the parameters substituted
+                effects = {}
+                for eff in definition["effect"]:
+                    targetValue = 0 if eff[0] == '!' else 1
+                    effects[ pattern.sub(lambda m: translation[re.escape(m.group(0))], eff.lstrip('!')) ] = targetValue
+
+                self.allActions[f"({action}{params})"]["effect"] = effects
 
     '''
     Returns a list of lists where each list contains all the objects of each type in listOfObjectTypes
@@ -143,7 +153,7 @@ class Environment:
     Return True if the action preconditions are satisfied in the current state
     '''
     def is_legal(self, action):
-        for pre, targetValue in self.allActions[action].items():
+        for pre, targetValue in self.allActions[action]["precondition"].items():
 
             if pre not in self.state and pre not in self.immutableProps:
                 return False
@@ -167,5 +177,9 @@ class Environment:
     def sample(self):
         return random.sample(set(filter(self.is_legal, self.allActions.keys())), 1)[0]
 
+    # TODO: Return newObservation, reward, done
     def step(self, action):
-        pass
+        for eff, value in self.allActions[action]["effect"].items():
+            self.state[eff] = value
+
+        return self.state, None, False
