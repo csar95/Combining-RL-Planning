@@ -3,11 +3,12 @@ import sys
 
 from utils import *
 
-
-# It does not accept a domain with or, when, forall statements. Only not is allowed
-# All objects must have a type.
-# All predicates parameters must have a type
-def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutablePreds, env):
+'''
+It does not accept a domain with or, when, forall statements. Only not is allowed
+All objects must have a type.
+All predicates parameters must have a type
+'''
+def read_domain_file(filePath, env):
     with open(filePath) as fp:
         Lines = fp.readlines()
         foundTypes = False
@@ -57,7 +58,7 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
 
             # Predicate without parameters --> It's an object-independent predicate
             elif "?" not in line.strip():
-                objIndependentPreds.add(re.sub("[()]", "", line.strip()).strip())
+                env.objIndependentPreds.add(re.sub("[()]", "", line.strip()).strip())
 
             else:
                 answered = False
@@ -75,10 +76,10 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
                     answered = True
 
                     if not valid[answer]:
-                        objDependentPreds.add(re.sub("[()]", "", line.strip()).strip())
+                        env.objDependentPreds.add(re.sub("[()]", "", line.strip()).strip())
 
                     else:
-                        immutablePreds.add(re.sub("[()]", "", line.strip()).strip())
+                        env.immutablePreds.add(re.sub("[()]", "", line.strip()).strip())
 
         # The content of ':parameters', ':precondition' and ':effect' need to be all in one line
         # ':action' needs to be in one line along with the action name. The same with the final ')'
@@ -120,7 +121,7 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
 
                 for idx, itm in enumerate(aux):
                     if '?' not in itm:
-                        for p in objIndependentPreds.union(objDependentPreds.union(immutablePreds)):
+                        for p in env.objIndependentPreds.union(env.objDependentPreds.union(env.immutablePreds)):
                             if re.sub("[()]", "", itm) in list(filter(lambda elm: elm != '', p.split(" "))):
                                 predicate = f"!({re.sub('[()]', '', itm)}" if "not" in aux[idx - 1] else f"({re.sub('[()]', '', itm)}"
                                 for remainingItem in aux[(idx+1):]:
@@ -143,7 +144,7 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
 
                 for idx, itm in enumerate(aux):
                     if '?' not in itm:
-                        for p in objIndependentPreds.union(objDependentPreds.union(immutablePreds)):
+                        for p in env.objIndependentPreds.union(env.objDependentPreds.union(env.immutablePreds)):
                             if re.sub("[()]", "", itm) in list(filter(lambda elm: elm != '', p.split(" "))):
                                 predicate = f"!({re.sub('[()]', '', itm)}" if "not" in aux[idx - 1] else f"({re.sub('[()]', '', itm)}"
                                 for remainingItem in aux[(idx + 1):]:
@@ -157,8 +158,7 @@ def read_domain_file(filePath, objIndependentPreds, objDependentPreds, immutable
 
                 env.actionsSchemas[actionName]["effect"] = effsPreds
 
-
-def read_problem_file(filePath, immutablePreds, env):
+def read_problem_file(filePath, env):
     with open(filePath) as fp:
         Lines = fp.readlines()
         foundObjects = False
@@ -210,23 +210,25 @@ def read_problem_file(filePath, immutablePreds, env):
             else:
                 # For each property in current line search for the ones immutable and add them to the environment
                 for prop in list(filter(lambda elm: '=' not in elm, re.findall(r"\((.*?)\)", line.strip()))):  # Omit properties with '='
-                    if property_in_predicates(list(filter(lambda elem: elem != '', prop.strip().split(" ")))[0], immutablePreds):
+                    if property_in_predicates(list(filter(lambda elem: elem != '', prop.strip().split(" ")))[0], env.immutablePreds):
                         env.immutableProps.add(f"({prop.strip()})")
                     else:
                         init_state.append(prop.strip())
 
     return init_state
 
-
-# Checks whether the prop_name exists in any of the predicates in the 2nd parameter
+'''
+Checks whether the prop_name exists in any of the predicates in the 2nd parameter
+'''
 def property_in_predicates(prop_name, predicates):
     for pred in predicates:
         if re.search(r"\b" + re.escape(prop_name) + r"\b", pred):
             return True
     return False
 
-
-# Returns the parent type of typ in targetSet. If typ doesn't have parent type it returns an empty string
+'''
+Returns the parent type of typ in targetSet. If typ doesn't have parent type it returns an empty string
+'''
 def check_parent_type(typ, targetSet):
     for key, value in targetSet.items():
         if typ == key:

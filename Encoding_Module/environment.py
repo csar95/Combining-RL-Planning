@@ -1,10 +1,20 @@
 import re
+import random
 import itertools
+
+from fileIO import *
 
 
 class Environment:
 
+    domainPath = RESOURCES_FOLDER + "domain.pddl"
+    problemPath = RESOURCES_FOLDER + "problem.pddl"
+
     def __init__(self):
+        self.objIndependentPreds = set([])
+        self.objDependentPreds = set([])
+        self.immutablePreds = set([])
+
         self.types = {}
         self.actionsSchemas = {}
 
@@ -14,23 +24,32 @@ class Environment:
         self.immutableProps = set([])
         self.state = {}
 
-    def initialize_state(self, objDependentPreds, objIndependentPreds, init_state):
+        # Reading domain file. Obtain the object dependent and independent properties
+        colorPrint("Reading domain file...", MAGENTA)
+        read_domain_file(self.domainPath, self)
+
+        # Reading problem file. Detect the immutable properties and the type of each object
+        colorPrint("\nReading problem file...", MAGENTA)
+        self.init_state = read_problem_file(self.problemPath, self)
+
         # Add the dependent predicates (non-immutable) to the state
-        for pred in objDependentPreds:
+        for pred in self.objDependentPreds:
             self.form_state_elements(pred)
 
         # Add the independent predicates to the state
-        for pred in objIndependentPreds:
+        for pred in self.objIndependentPreds:
             self.state[f"({pred})"] = 0
 
-        for prop in init_state:
-            bit = '('
-            for idx, x in enumerate(list(filter(lambda elem: elem != '', prop.strip().split(" ")))):
-                bit += x if idx == 0 else ' ' + x
-            bit += ')'
-            self.state[bit] = 1
+        # This will be useful to form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
+        colorPrint("Finding all possible actions in this environment...", MAGENTA)
+        self.get_all_actions()
 
-    # Adds all forms of the current predicate to the environment state
+        # Initialize the state encoding as per the init block in the problem file
+        self.reset()
+
+    '''
+    Adds all forms of the current predicate to the environment state
+    '''
     def form_state_elements(self, predicate):
         predicate = list(filter(lambda elm: elm != '', predicate.split(" ")))
         name = predicate[0]
@@ -54,7 +73,9 @@ class Environment:
             for elem in tup: objs += (" " + elem)
             self.state[f"({name}{objs})"] = 0  # Add each term to the dictionary initialized to 0
 
-    # Return a set of all the possible actions that exist in this environment
+    '''
+    Finds a set of all the possible actions that exist in this environment
+    '''
     def get_all_actions(self):
         for action, definition in self.actionsSchemas.items():
             # Get all objects of each type of object in the action parameters
@@ -81,7 +102,9 @@ class Environment:
 
                 self.allActions[f"({action}{params})"] = preconditions
 
-    # Returns a list of lists where each list contains all the objects of each type in listOfObjectTypes
+    '''
+    Returns a list of lists where each list contains all the objects of each type in listOfObjectTypes
+    '''
     def get_pool_of_objects(self, listOfObjectTypes):
         poolOfObjects = []
 
@@ -116,7 +139,9 @@ class Environment:
     def get_legal_actions(self):
         return set(filter(self.is_legal, self.allActions.keys()))
 
-    # Return True if the action preconditions are satisfied in the current state
+    '''
+    Return True if the action preconditions are satisfied in the current state
+    '''
     def is_legal(self, action):
         for pre, targetValue in self.allActions[action].items():
 
@@ -126,3 +151,21 @@ class Environment:
                 return False
 
         return True
+
+# -------------------------------------------------------------------------------------------------------------------- #
+
+    def reset(self):
+        for prop in self.init_state:
+            bit = '('
+            for idx, x in enumerate(list(filter(lambda elem: elem != '', prop.strip().split(" ")))):
+                bit += x if idx == 0 else ' ' + x
+            bit += ')'
+            self.state[bit] = 1
+
+        return self.state
+
+    def sample(self):
+        return random.sample(set(filter(self.is_legal, self.allActions.keys())), 1)[0]
+
+    def step(self, action):
+        pass
