@@ -11,158 +11,134 @@ All predicates parameters must have a type
 def read_domain_file(filePath, env):
     with open(filePath) as fp:
         Lines = fp.readlines()
-        foundTypes = False
-        foundPredicates = False
 
-        '''
-        Types need to be in different lines. Subtypes need to be all in the same line as the type.
-        ':types' needs to be alone in one line. The same with the final ')'
-        '''
-
-        for line in Lines:
-            if foundTypes and line.strip() == ")":
-                break
-
-            elif ":types" in line.strip():
-                foundTypes = True
-
-            elif not foundTypes or not line.strip():
-                continue
-
-            # Only 1 type in this line
-            elif "-" not in line.strip():
-                env.types[f"{line.strip()}"] = []
-
-            # At least 1 subtype and the type it belongs to
-            else:
-                types = list(filter(lambda elm: elm != '', line.strip().split(" ")))
-                parentType = ""
-                for t in reversed(types):
-                    if not parentType:
-                        parentType = t
-                        if parentType not in env.types.keys():
-                            env.types[f"{parentType}"] = {}
-                    elif t != "-":
-                        env.types[f"{parentType}"][f"{t}"] = []
-
-        '''
-        It only accepts one predicate per line
-        ':predicates' needs to be alone in one line. The same with the final ')'
-        '''
-
-        for line in Lines:
-            if foundPredicates and line.strip() == ")":
-                break
-
-            elif ":predicates" in line.strip():
-                foundPredicates = True
-
-            elif not foundPredicates or not line.strip():
-                continue
-
-            # Predicate without parameters --> It's an object-independent predicate
-            elif "?" not in line.strip():
-                env.objIndependentPreds.add(re.sub("[()]", "", line.strip()).strip())
-
-            else:
-                answered = False
-                while not answered:
-                    # THIS INFO COULD BE OBTAINED IF THE PREDICATE DOESN'T APPEAR IN ANY ACTION EFFECT
-                    answer = input(f'Is "{line.strip()}" an immutable predicate? [y/N]\n').lower()
-
-                    if answer == "":
-                        answer = "n"
-
-                    elif answer not in valid:
-                        sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
-                        continue
-
-                    answered = True
-
-                    if not valid[answer]:
-                        env.objDependentPreds.add(re.sub("[()]", "", line.strip()).strip())
-
-                    else:
-                        env.immutablePreds.add(re.sub("[()]", "", line.strip()).strip())
-
-        '''
-        The content of ':parameters', ':precondition' and ':effect' need to be all in one line
-        ':action' needs to be in one line along with the action name. The same with the final ')'
-        '''
-
+        currentBlock = ""
         actionName = ""
 
         for line in Lines:
-            if actionName and line.strip() == ")":
-                actionName = ""
+            if not line.strip(): continue
 
-            elif ":action-costs" not in line.strip() and ":action" in line.strip():
+            elif currentBlock and line.strip() == ")":
+                currentBlock = ""
+            elif not currentBlock and ":types" in line.strip():
+                currentBlock = "types"
+            elif not currentBlock and ":predicates" in line.strip():
+                currentBlock = "predicates"
+            elif not currentBlock and ":action-costs" not in line.strip() and ":action" in line.strip():
+                currentBlock = "action"
                 actionName = list(filter(lambda elm: elm != '', line.strip().split(" ")))[-1]
                 env.actionsSchemas[actionName] = {}
 
-            elif not actionName or not line.strip():
-                continue
+            # Types need to be in different lines. Subtypes need to be all in the same line as the type.
+            # ':types' needs to be alone in one line. The same with the final ')'
 
-            # Add parameters to the current action schema
-            elif ":parameters" in line.strip():
-                parameters = list(filter(lambda elm: elm != '', line.strip().split(" ")))
+            elif currentBlock == "types":
+                # Only 1 type in this line
+                if "-" not in line.strip():
+                    env.types[f"{line.strip()}"] = []
+                # At least 1 subtype and the type it belongs to
+                else:
+                    types = list(filter(lambda elm: elm != '', line.strip().split(" ")))
+                    parentType = ""
+                    for t in reversed(types):
+                        if not parentType:
+                            parentType = t
+                            if parentType not in env.types.keys():
+                                env.types[f"{parentType}"] = {}
+                        elif t != "-":
+                            env.types[f"{parentType}"][f"{t}"] = []
 
-                objectTypes = []
-                for idx, elem in enumerate(parameters):
-                    if "?" in elem:  # Elem is an object --> Check the type
-                        for i, x in enumerate(parameters[(idx + 1):]):
-                            if x == "-":
-                                objectTypes.append((re.sub("[()]", "", elem),
-                                                    re.sub("[()]", "", parameters[idx + 1 + (i + 1)])))
-                                break
+            # It only accepts one predicate per line
+            # ':predicates' needs to be alone in one line. The same with the final ')'
 
-                env.actionsSchemas[actionName]["parameters"] = objectTypes
+            elif currentBlock == "predicates":
+                # Predicate without parameters --> It's an object-independent predicate
+                if "?" not in line.strip():
+                    env.objIndependentPreds.add(re.sub("[()]", "", line.strip()).strip())
+                else:
+                    answered = False
+                    while not answered:
+                        # THIS INFO COULD BE OBTAINED IF THE PREDICATE DOESN'T APPEAR IN ANY ACTION EFFECT
+                        answer = input(f'Is "{line.strip()}" an immutable predicate? [y/N]\n').lower()
 
-            # Add the predicates in the precondition to the current action schema
-            elif ":precondition" in line.strip():
-                precondsPreds = []
+                        if answer == "":
+                            answer = "n"
 
-                aux = list(filter(lambda elm: elm != '' and elm != '(' and elm != ')' and elm != ":precondition" and
-                                              "and" not in elm, line.strip().split(" ")))
+                        elif answer not in valid:
+                            sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
+                            continue
 
-                for idx, itm in enumerate(aux):
-                    if '?' not in itm:
-                        for p in env.objIndependentPreds.union(env.objDependentPreds.union(env.immutablePreds)):
-                            if re.sub("[()]", "", itm) in list(filter(lambda elm: elm != '', p.split(" "))):
-                                predicate = f"!({re.sub('[()]', '', itm)}" if "not" in aux[idx - 1] else f"({re.sub('[()]', '', itm)}"
-                                for remainingItem in aux[(idx+1):]:
-                                    if '?' in remainingItem:
-                                        predicate += f" {re.sub('[()]', '', remainingItem)}"
-                                    else:
-                                        break
-                                predicate += ")"
-                                precondsPreds.append(predicate)
-                                break
+                        answered = True
 
-                env.actionsSchemas[actionName]["precondition"] = precondsPreds
+                        if not valid[answer]:
+                            env.objDependentPreds.add(re.sub("[()]", "", line.strip()).strip())
 
-            # Add the predicates in the effect to the current action schema
-            elif ":effect" in line.strip():
-                effsPreds = []
+                        else:
+                            env.immutablePreds.add(re.sub("[()]", "", line.strip()).strip())
 
-                aux = list(filter(lambda elm: elm != '' and elm != '(' and elm != ')' and elm != ":effect" and
-                                              "and" not in elm, line.strip().split(" ")))
+            # The content of ':parameters', ':precondition' and ':effect' need to be all in one line
+            # ':action' needs to be in one line along with the action name. The same with the final ')'
 
-                for idx, itm in enumerate(aux):
-                    if '?' not in itm:
-                        for p in env.objIndependentPreds.union(env.objDependentPreds.union(env.immutablePreds)):
-                            if re.sub("[()]", "", itm) in list(filter(lambda elm: elm != '', p.split(" "))):
-                                predicate = f"!({re.sub('[()]', '', itm)}" if "not" in aux[idx - 1] else f"({re.sub('[()]', '', itm)}"
-                                for remainingItem in aux[(idx + 1):]:
-                                    if '?' in remainingItem:
-                                        predicate += f" {re.sub('[()]', '', remainingItem)}"
-                                    else:
-                                        break
-                                predicate += ")"
-                                effsPreds.append(predicate)
-                                break
+            elif currentBlock == "action":
+                # Add parameters to the current action schema
+                if ":parameters" in line.strip():
+                    parameters = list(filter(lambda elm: elm != '', line.strip().split(" ")))
 
-                env.actionsSchemas[actionName]["effect"] = effsPreds
+                    objectTypes = []
+                    for idx, elem in enumerate(parameters):
+                        if "?" in elem:  # Elem is an object --> Check the type
+                            for i, x in enumerate(parameters[(idx + 1):]):
+                                if x == "-":
+                                    objectTypes.append((re.sub("[()]", "", elem),
+                                                        re.sub("[()]", "", parameters[idx + 1 + (i + 1)])))
+                                    break
+
+                    env.actionsSchemas[actionName]["parameters"] = objectTypes
+
+                # Add the predicates in the precondition to the current action schema
+                elif ":precondition" in line.strip():
+                    precondsPreds = []
+
+                    aux = list(filter(lambda elm: elm != '' and elm != '(' and elm != ')' and elm != ":precondition" and "and" not in elm, line.strip().split(" ")))
+
+                    for idx, itm in enumerate(aux):
+                        if '?' not in itm:
+                            for p in env.objIndependentPreds.union(env.objDependentPreds.union(env.immutablePreds)):
+                                if re.sub("[()]", "", itm) in list(filter(lambda elm: elm != '', p.split(" "))):
+                                    predicate = f"!({re.sub('[()]', '', itm)}" if "not" in aux[idx - 1] else f"({re.sub('[()]', '', itm)}"
+                                    for remainingItem in aux[(idx + 1):]:
+                                        if '?' in remainingItem:
+                                            predicate += f" {re.sub('[()]', '', remainingItem)}"
+                                        else:
+                                            break
+                                    predicate += ")"
+                                    precondsPreds.append(predicate)
+                                    break
+
+                    env.actionsSchemas[actionName]["precondition"] = precondsPreds
+
+                # Add the predicates in the effect to the current action schema
+                elif ":effect" in line.strip():
+                    effsPreds = []
+
+                    aux = list(filter(lambda elm: elm != '' and elm != '(' and elm != ')' and elm != ":effect" and
+                                                  "and" not in elm, line.strip().split(" ")))
+
+                    for idx, itm in enumerate(aux):
+                        if '?' not in itm:
+                            for p in env.objIndependentPreds.union(env.objDependentPreds.union(env.immutablePreds)):
+                                if re.sub("[()]", "", itm) in list(filter(lambda elm: elm != '', p.split(" "))):
+                                    predicate = f"!({re.sub('[()]', '', itm)}" if "not" in aux[idx - 1] else f"({re.sub('[()]', '', itm)}"
+                                    for remainingItem in aux[(idx + 1):]:
+                                        if '?' in remainingItem:
+                                            predicate += f" {re.sub('[()]', '', remainingItem)}"
+                                        else:
+                                            break
+                                    predicate += ")"
+                                    effsPreds.append(predicate)
+                                    break
+
+                    env.actionsSchemas[actionName]["effect"] = effsPreds
 
 def read_problem_file(filePath, env):
     with open(filePath) as fp:

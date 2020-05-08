@@ -18,9 +18,10 @@
 	(next ?n1 - count ?n2 - count)
 )
 
-(:functions (total-cost) - number
-            (travel-slow ?f1 - count ?f2 - count) - number
-            (travel-fast ?f1 - count ?f2 - count) - number 
+(:functions
+    (total-cost) - number
+    (travel-slow ?f1 - count ?f2 - count) - number
+    (travel-fast ?f1 - count ?f2 - count) - number
 )
 
 (:action move-up-slow
