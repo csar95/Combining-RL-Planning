@@ -10,6 +10,10 @@ print(env.types)
 colorPrint("\n------- ACTIONS -------", CYAN)
 print(env.actionsSchemas)
 
+colorPrint("\n------- FUNCTIONS -------", CYAN)
+for line in env.functions:
+    print(line)
+
 colorPrint("\n------- OBJECT INDEPENDENT PROPERTIES -------", CYAN)
 for line in env.objIndependentPreds:
     print(line)
@@ -32,6 +36,9 @@ print(env.types)
 
 colorPrint("\n------- GOAL STATE -------", CYAN)
 print(env.goal_state)
+
+colorPrint("\n------- FUNCTIONS VALUES -------", CYAN)
+print(env.allFunctions)
 
 # ------------------------------------------------------------------------ #
 

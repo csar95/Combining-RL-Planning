@@ -24,6 +24,8 @@ def read_domain_file(filePath, env):
                 currentBlock = "types"
             elif not currentBlock and ":predicates" in line.strip():
                 currentBlock = "predicates"
+            elif not currentBlock and ":functions" in line.strip():
+                currentBlock = "functions"
             elif not currentBlock and ":action-costs" not in line.strip() and ":action" in line.strip():
                 currentBlock = "action"
                 actionName = list(filter(lambda elm: elm != '', line.strip().split(" ")))[-1]
@@ -76,6 +78,13 @@ def read_domain_file(filePath, env):
                         else:
                             env.immutablePreds.add(re.sub("[()]", "", line.strip()).strip())
 
+            # There can be several functions in one line
+            # ':functions' needs to be alone in one line. The same with the final ')'
+
+            elif currentBlock == "functions":
+                for func in list(re.findall(r"\((.*?)\)", line.strip())):
+                    env.functions.add(func)
+
             # The content of ':parameters', ':precondition' and ':effect' need to be all in one line
             # ':action' needs to be in one line along with the action name. The same with the final ')'
 
@@ -99,12 +108,12 @@ def read_domain_file(filePath, env):
                 elif ":precondition" in line.strip():
                     precondsPreds = []
 
-                    aux = list(filter(lambda elm: elm != '' and elm != '(' and elm != ')' and elm != ":precondition" and "and" not in elm, line.strip().split(" ")))
+                    aux = list(filter(lambda elm: elm != '(' and elm != ')', list(re.findall(r".*?:precondition.*?\(.*?and(.*).*?\)", line.strip()))[0].split()))
 
                     for idx, itm in enumerate(aux):
                         if '?' not in itm:
                             for p in env.objIndependentPreds.union(env.objDependentPreds.union(env.immutablePreds)):
-                                if re.sub("[()]", "", itm) in list(filter(lambda elm: elm != '', p.split(" "))):
+                                if re.sub("[()]", "", itm) in p.split():
                                     predicate = f"!({re.sub('[()]', '', itm)}" if "not" in aux[idx - 1] else f"({re.sub('[()]', '', itm)}"
                                     for remainingItem in aux[(idx + 1):]:
                                         if '?' in remainingItem:
@@ -119,15 +128,28 @@ def read_domain_file(filePath, env):
 
                 # Add the predicates in the effect to the current action schema
                 elif ":effect" in line.strip():
+                    env.actionsSchemas[actionName]["reward"] = {}
+
                     effsPreds = []
 
-                    aux = list(filter(lambda elm: elm != '' and elm != '(' and elm != ')' and elm != ":effect" and
-                                                  "and" not in elm, line.strip().split(" ")))
+                    aux = list(filter(lambda elm: elm != '(' and elm != ')', list(re.findall(r".*?:effect.*?\(.*?and(.*).*?\)", line.strip()))[0].split()))
 
                     for idx, itm in enumerate(aux):
-                        if '?' not in itm:
+                        if "increase" in itm:  # TODO: WHAT IF THERE ARE MORE
+                            if '?' not in aux[(idx + 2)]:
+                                metric = re.sub("[()]", '', aux[(idx + 1)])
+                                env.actionsSchemas[actionName]["reward"][metric] = get_reward_value(aux, idx, 0)
+                            else:
+                                metric = f"({re.sub('[()]', '', aux[idx+1])}"
+                                for i, remainingItem in enumerate(aux[(idx + 2):]):
+                                    if '?' not in remainingItem: break
+                                    metric += f" {re.sub('[()]', '', remainingItem)}"
+                                metric += ')'
+                                env.actionsSchemas[actionName]["reward"][metric] = get_reward_value(aux, idx, i)
+
+                        elif '?' not in itm:
                             for p in env.objIndependentPreds.union(env.objDependentPreds.union(env.immutablePreds)):
-                                if re.sub("[()]", "", itm) in list(filter(lambda elm: elm != '', p.split(" "))):
+                                if re.sub("[()]", "", itm) in p.split():
                                     predicate = f"!({re.sub('[()]', '', itm)}" if "not" in aux[idx - 1] else f"({re.sub('[()]', '', itm)}"
                                     for remainingItem in aux[(idx + 1):]:
                                         if '?' in remainingItem:
@@ -181,15 +203,26 @@ def read_problem_file(filePath, env):
                             env.types[f"{parentType}"][f"{typ}"].append(obj)
 
             # It's okay to define multiple properties in the same line
+            # (= (..) 1) Function predicates need to be separated from normal predicates
             # ':init' needs to be alone in one line. The same with the final ')'
 
             elif currentBlock == "init":
-                # For each property in current line search for the ones immutable and add them to the environment
-                for prop in list(filter(lambda elm: '=' not in elm, re.findall(r"\((.*?)\)", line.strip()))):  # Omit properties with '='
-                    if property_in_predicates(list(filter(lambda elem: elem != '', prop.strip().split(" ")))[0], env.immutablePreds):
-                        env.immutableProps.add(f"({prop.strip()})")
-                    else:
-                        init_state.append(prop.strip())
+                if "=" in line.strip():  # Function predicates
+                    for func in list(re.findall(r"\(.*?=(.*?\).*?)\)", line.strip())):
+                        prop = "("
+                        for elem in re.findall(r"\((.*?)\)", func)[0].split():
+                            prop += elem if prop == "(" else f" {elem}"
+                        prop += ")"
+                        value = int(func.split()[-1])
+
+                        env.allFunctions[prop] = value
+                else:
+                    # For each property in current line search for the ones immutable and add them to the environment
+                    for prop in list(filter(lambda elm: '=' not in elm, re.findall(r"\((.*?)\)", line.strip()))):  # Omit properties with '='
+                        if property_in_predicates(list(filter(lambda elem: elem != '', prop.strip().split(" ")))[0], env.immutablePreds):
+                            env.immutableProps.add(f"({prop.strip()})")
+                        else:
+                            init_state.append(prop.strip())
 
             # It's okay to define multiple properties in the same line
             # There's need to be a space after 'not'
@@ -230,3 +263,15 @@ def check_parent_type(typ, targetSet):
             for k, v in value.items():
                 if typ == k:
                     return key
+
+def get_reward_value(aux, idx, i):
+    if re.sub('[()]', '', aux[idx + 2 + i]).isdigit():
+        value = re.sub('[()]', '', aux[idx + 2 + i])
+    else:
+        value = f"({re.sub('[()]', '', aux[idx + 2 + i])}"
+        for remainingItem in aux[(idx + 3 + i):]:
+            if '?' not in remainingItem: break
+            value += f" {re.sub('[()]', '', remainingItem)}"
+        value += ')'
+
+    return value

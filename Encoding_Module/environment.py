@@ -16,10 +16,13 @@ class Environment:
         self.immutablePreds = set([])
 
         self.types = {}
+        self.functions = set([])
         self.actionsSchemas = {}
 
         # allActions is a dictionary of this type --> '(board p7 slow0-0 n1 n2 n8)': {'(lift-at slow0-0 n1)': 1, '(passenger-at p7 n1)': 1, '(passengers slow0-0 n2)': 1, '(next n2 n8)': 1, '(can-hold slow0-0 n8)': 1}
         self.allActions = {}
+
+        self.allFunctions = {}
 
         self.immutableProps = set([])
         self.state = {}
