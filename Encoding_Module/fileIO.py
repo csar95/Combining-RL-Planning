@@ -143,27 +143,30 @@ def read_domain_file(filePath, env):
 def read_problem_file(filePath, env):
     with open(filePath) as fp:
         Lines = fp.readlines()
-        foundObjects = False
-        foundInit = False
-        foundGoal = False
 
-        '''
-        It only accepts objects of one type per line
-        A type with subtypes cannot have objects assigned. Objects need to be assigned to the subtypes
-        ':objects' needs to be alone in one line. The same with the final ')'
-        '''
+        currentBlock = ""
+        init_state = []
+        goal_state = []
 
         for line in Lines:
-            if foundObjects and line.strip() == ")":
+            if not line.strip(): continue
+
+            elif currentBlock == "goal" and line.strip() == "))":
                 break
+            elif currentBlock and line.strip() == ")":
+                currentBlock = ""
+            elif not currentBlock and ":objects" in line.strip():
+                currentBlock = "objects"
+            elif not currentBlock and ":init" in line.strip():
+                currentBlock = "init"
+            elif not currentBlock and ":goal" in line.strip():
+                currentBlock = "goal"
 
-            elif ":objects" in line.strip():
-                foundObjects = True
+            # It only accepts objects of one type per line
+            # A type with subtypes cannot have objects assigned. Objects need to be assigned to the subtypes
+            # ':objects' needs to be alone in one line. The same with the final ')'
 
-            elif not foundObjects or not line.strip():
-                continue
-
-            else:
+            elif currentBlock == "objects":
                 typ = ""
 
                 # Iterate through the objects in this line reading from the type
@@ -177,24 +180,10 @@ def read_problem_file(filePath, env):
                         else:
                             env.types[f"{parentType}"][f"{typ}"].append(obj)
 
-        '''
-        It's okay to define multiple properties in the same line
-        ':init' needs to be alone in one line. The same with the final ')'
-        '''
+            # It's okay to define multiple properties in the same line
+            # ':init' needs to be alone in one line. The same with the final ')'
 
-        init_state = []
-
-        for line in Lines:
-            if foundInit and line.strip() == ")":
-                break
-
-            elif ":init" in line.strip():
-                foundInit = True
-
-            elif not foundInit or not line.strip():
-                continue
-
-            else:
+            elif currentBlock == "init":
                 # For each property in current line search for the ones immutable and add them to the environment
                 for prop in list(filter(lambda elm: '=' not in elm, re.findall(r"\((.*?)\)", line.strip()))):  # Omit properties with '='
                     if property_in_predicates(list(filter(lambda elem: elem != '', prop.strip().split(" ")))[0], env.immutablePreds):
@@ -202,25 +191,11 @@ def read_problem_file(filePath, env):
                     else:
                         init_state.append(prop.strip())
 
-        '''
-        It's okay to define multiple properties in the same line
-        There's need to be a space after 'not'
-        ':goal' needs to be alone in one line. The same with the final '))' and the keyword 'and'
-        '''
+            # It's okay to define multiple properties in the same line
+            # There's need to be a space after 'not'
+            # ':goal' needs to be alone in one line. The same with the final '))' and the keyword 'and'
 
-        goal_state = []
-
-        for line in Lines:
-            if foundGoal and line.strip() == "))":
-                break
-
-            elif ":goal" in line.strip():
-                foundGoal = True
-
-            elif not foundGoal or not line.strip() or "and" in line.strip():
-                continue
-
-            else:
+            elif currentBlock == "goal":
                 # For each property in current line add it to the goal state
                 for prop in list(re.findall(r"\((.*?)\)", line.strip())):
 
