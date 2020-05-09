@@ -1,6 +1,7 @@
 import re
 import random
 import itertools
+import speedUp
 
 from fileIO import *
 
@@ -249,7 +250,8 @@ class Environment:
         return self.state
 
     def sample(self):
-        return random.sample(self.get_legal_actions(), 1)[0]
+        return random.sample(speedUp.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
+        # return random.sample(self.get_legal_actions(), 1)[0]
 
     def step(self, action):
         for eff, value in self.allActions[action]["effect"].items():
