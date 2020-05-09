@@ -28,7 +28,7 @@ def read_domain_file(filePath, env):
                 currentBlock = "functions"
             elif not currentBlock and ":action-costs" not in line.strip() and ":action" in line.strip():
                 currentBlock = "action"
-                actionName = list(filter(lambda elm: elm != '', line.strip().split(" ")))[-1]
+                actionName = line.strip().split()[-1]
                 env.actionsSchemas[actionName] = {}
 
             # Types need to be in different lines. Subtypes need to be all in the same line as the type.
@@ -40,7 +40,7 @@ def read_domain_file(filePath, env):
                     env.types[f"{line.strip()}"] = []
                 # At least 1 subtype and the type it belongs to
                 else:
-                    types = list(filter(lambda elm: elm != '', line.strip().split(" ")))
+                    types = line.strip().split()
                     parentType = ""
                     for t in reversed(types):
                         if not parentType:
@@ -91,7 +91,7 @@ def read_domain_file(filePath, env):
             elif currentBlock == "action":
                 # Add parameters to the current action schema
                 if ":parameters" in line.strip():
-                    parameters = list(filter(lambda elm: elm != '', line.strip().split(" ")))
+                    parameters = line.strip().split()
 
                     objectTypes = []
                     for idx, elem in enumerate(parameters):
@@ -128,18 +128,17 @@ def read_domain_file(filePath, env):
 
                 # Add the predicates in the effect to the current action schema
                 elif ":effect" in line.strip():
-                    env.actionsSchemas[actionName]["reward"] = {}
-
                     effsPreds = []
+                    env.actionsSchemas[actionName]["reward"] = {}
 
                     aux = list(filter(lambda elm: elm != '(' and elm != ')', list(re.findall(r".*?:effect.*?\(.*?and(.*).*?\)", line.strip()))[0].split()))
 
                     for idx, itm in enumerate(aux):
-                        if "increase" in itm:  # TODO: WHAT IF THERE ARE MORE
-                            if '?' not in aux[(idx + 2)]:
-                                metric = re.sub("[()]", '', aux[(idx + 1)])
+                        if "increase" in itm:
+                            if '?' not in aux[(idx + 2)]:  # E.g., (increase (total-cost) (travel-slow ?f1 ?f2))
+                                metric = f"({re.sub('[()]', '', aux[(idx + 1)])})"
                                 env.actionsSchemas[actionName]["reward"][metric] = get_reward_value(aux, idx, 0)
-                            else:
+                            else:  # E.g., (increase (travel-slow ?f1 ?f2) (total-cost))
                                 metric = f"({re.sub('[()]', '', aux[idx+1])}"
                                 for i, remainingItem in enumerate(aux[(idx + 2):]):
                                     if '?' not in remainingItem: break
@@ -173,7 +172,7 @@ def read_problem_file(filePath, env):
         for line in Lines:
             if not line.strip(): continue
 
-            elif currentBlock == "goal" and line.strip() == "))":
+            elif not currentBlock and line.strip() == ")":
                 break
             elif currentBlock and line.strip() == ")":
                 currentBlock = ""
@@ -207,7 +206,7 @@ def read_problem_file(filePath, env):
             # ':init' needs to be alone in one line. The same with the final ')'
 
             elif currentBlock == "init":
-                if "=" in line.strip():  # Function predicates
+                if "=" in line.strip():  # Function predicates. E.g.: (= (travel-fast n12 n16) 13)
                     for func in list(re.findall(r"\(.*?=(.*?\).*?)\)", line.strip())):
                         prop = "("
                         for elem in re.findall(r"\((.*?)\)", func)[0].split():
@@ -225,8 +224,8 @@ def read_problem_file(filePath, env):
                             init_state.append(prop.strip())
 
             # It's okay to define multiple properties in the same line
-            # There's need to be a space after 'not'
-            # ':goal' needs to be alone in one line. The same with the final '))' and the keyword 'and'
+            # There's need to be a space after 'not'. The final ')' for the 'and' needs to be inline with the last element
+            # ':goal' needs to be alone in one line. The same with the final ')' and the keyword 'and'
 
             elif currentBlock == "goal":
                 # For each property in current line add it to the goal state
@@ -265,9 +264,9 @@ def check_parent_type(typ, targetSet):
                     return key
 
 def get_reward_value(aux, idx, i):
-    if re.sub('[()]', '', aux[idx + 2 + i]).isdigit():
+    if re.sub('[()]', '', aux[idx + 2 + i]).isdigit():  # E.g., (increase (total-cost) 1)
         value = re.sub('[()]', '', aux[idx + 2 + i])
-    else:
+    else:  # E.g., (increase (total-cost) (travel-slow ?f1 ?f2))
         value = f"({re.sub('[()]', '', aux[idx + 2 + i])}"
         for remainingItem in aux[(idx + 3 + i):]:
             if '?' not in remainingItem: break

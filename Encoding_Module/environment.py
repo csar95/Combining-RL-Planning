@@ -21,7 +21,7 @@ class Environment:
 
         # allActions is a dictionary of this type --> '(board p7 slow0-0 n1 n2 n8)': {'(lift-at slow0-0 n1)': 1, '(passenger-at p7 n1)': 1, '(passengers slow0-0 n2)': 1, '(next n2 n8)': 1, '(can-hold slow0-0 n8)': 1}
         self.allActions = {}
-
+        # allFunctions is a dictionary of this type --> '(travel-slow n0 n1)': 6, '(travel-slow n0 n2)': 7, '(travel-slow n0 n3)': 8, '(travel-slow n0 n4)': 9, ..., '(total-cost)': 0
         self.allFunctions = {}
 
         self.immutableProps = set([])
@@ -90,7 +90,7 @@ class Environment:
                 params = ""
                 for elem in tup: params += (" " + elem)
 
-                self.allActions[f"({action}{params})"] = {}
+                newAction = {}
 
                 # Match parameters in tup with the param. names in the current action
                 translation = {}
@@ -99,13 +99,32 @@ class Environment:
 
                 pattern = re.compile("|".join(translation.keys()))
 
+                # Get rewards of the current action with the parameters substituted
+                newActionIsValid = True
+                reward = {}
+                for func, value in definition["reward"].items():
+                    if value.isdigit():
+                        v = int(value)
+                    elif pattern.sub(lambda m: translation[re.escape(m.group(0))], value) in self.allFunctions:
+                        v = int(self.allFunctions[pattern.sub(lambda m: translation[re.escape(m.group(0))], value)])
+                    else:
+                        newActionIsValid = False
+                        break
+
+                    reward[ pattern.sub(lambda m: translation[re.escape(m.group(0))], func) ] = v
+
+                if not newActionIsValid:
+                    continue
+                else:
+                    newAction["reward"] = reward
+
                 # Get preconditions of the current action with the parameters substituted
                 preconditions = {}
                 for pred in definition["precondition"]:
                     targetValue = 0 if pred[0] == '!' else 1
                     preconditions[ pattern.sub(lambda m: translation[re.escape(m.group(0))], pred.lstrip('!')) ] = targetValue
 
-                self.allActions[f"({action}{params})"]["precondition"] = preconditions
+                newAction["precondition"] = preconditions
 
                 # Get effects of the current action with the parameters substituted
                 effects = {}
@@ -113,7 +132,9 @@ class Environment:
                     targetValue = 0 if eff[0] == '!' else 1
                     effects[ pattern.sub(lambda m: translation[re.escape(m.group(0))], eff.lstrip('!')) ] = targetValue
 
-                self.allActions[f"({action}{params})"]["effect"] = effects
+                newAction["effect"] = effects
+
+                self.allActions[f"({action}{params})"] = newAction
 
     '''
     Returns a list of lists where each list contains all the objects of each type in listOfObjectTypes
@@ -179,6 +200,15 @@ class Environment:
 
         return True
 
+    '''
+    Returns the reward obtained taking this action based on the increase keyword in the definition of the action
+    '''
+    def get_reward(self, action):
+        reward = 0
+        for rwd in self.allActions[action]["reward"].values():
+            reward -= rwd
+        return -1 if reward == 0 else reward  # Default reward (penalty) for taking a step: -1
+
 # -------------------------------------------------------------------------------------------------------------------- #
 
     def reset(self):
@@ -194,9 +224,8 @@ class Environment:
     def sample(self):
         return random.sample(set(filter(self.is_legal, self.allActions.keys())), 1)[0]
 
-    # TODO: Return reward
     def step(self, action):
         for eff, value in self.allActions[action]["effect"].items():
             self.state[eff] = value
 
-        return self.state, None, self.is_done()
+        return self.state, self.get_reward(action), self.is_done()

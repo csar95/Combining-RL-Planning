@@ -95,8 +95,8 @@ slow0-0 slow1-0 - slow-elevator
 (passenger-at p10 n12)
 (passenger-at p11 n13)
 (passenger-at p12 n5)
-(passenger-at p13 n6)
-))
+(passenger-at p13 n6))
+)
 
 (:metric minimize (total-cost))
 
