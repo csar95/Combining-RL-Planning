@@ -24,7 +24,6 @@ class Environment:
         # allFunctions is a dictionary of this type --> '(travel-slow n0 n1)': 6, '(travel-slow n0 n2)': 7, '(travel-slow n0 n3)': 8, '(travel-slow n0 n4)': 9, ..., '(total-cost)': 0
         self.allFunctions = {}
 
-        self.immutableProps = set([])
         self.state = {}
 
         # Reading domain file. Obtain the object dependent and independent properties
@@ -33,7 +32,7 @@ class Environment:
 
         # Reading problem file. Detect the immutable properties and the type of each object
         colorPrint("\nReading problem file...", MAGENTA)
-        self.init_state, self.goal_state = read_problem_file(self.problemPath, self)
+        self.init_state, self.goal_state, self.immutableProps = read_problem_file(self.problemPath, self)
 
         # Add the dependent predicates (non-immutable) to the state
         for pred in self.objDependentPreds:
@@ -44,11 +43,13 @@ class Environment:
             self.state[f"({pred})"] = 0
 
         # This will be useful to form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
-        colorPrint("Finding all possible actions in this environment...", MAGENTA)
+        colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
         self.get_all_actions()
 
         # Initialize the state encoding as per the init block in the problem file
         self.reset()
+
+        colorPrint("\nENVIRONMENT IS READY\n", MAGENTA)
 
     '''
     Adds all forms of the current predicate to the environment state
@@ -174,18 +175,44 @@ class Environment:
     Returns all legal actions from the current state
     '''
     def get_legal_actions(self):
-        return set(filter(self.is_legal, self.allActions.keys()))
+        legalActions = set([])
+
+        add = legalActions.add
+        items = dict.items
+        state = self.state
+        immutableProps = self.immutableProps
+
+        for action, definition in items(self.allActions):
+
+            legal = True
+            for pre, targetValue in items(definition["precondition"]):
+                try:
+                    if state[pre] != targetValue:
+                        legal = False
+                        break
+                except KeyError:
+                    if pre not in immutableProps:
+                        legal = False
+                        break
+
+            if legal: add(action)
+
+        return legalActions
 
     '''
     Returns whether the action preconditions are satisfied in the current state or not
     '''
     def is_legal(self, action):
-        for pre, targetValue in self.allActions[action]["precondition"].items():
+        state = self.state
+        immutableProps = self.immutableProps
 
-            if pre not in self.state and pre not in self.immutableProps:
-                return False
-            if pre in self.state and self.state[pre] != targetValue:
-                return False
+        for pre, targetValue in self.allActions[action]["precondition"].items():
+            try:
+                if state[pre] != targetValue:
+                    return False
+            except KeyError:
+                if pre not in immutableProps:
+                    return False
 
         return True
 
@@ -222,7 +249,7 @@ class Environment:
         return self.state
 
     def sample(self):
-        return random.sample(set(filter(self.is_legal, self.allActions.keys())), 1)[0]
+        return random.sample(self.get_legal_actions(), 1)[0]
 
     def step(self, action):
         for eff, value in self.allActions[action]["effect"].items():

@@ -168,6 +168,7 @@ def read_problem_file(filePath, env):
         currentBlock = ""
         init_state = []
         goal_state = []
+        immutableProps = set([])
 
         for line in Lines:
             if not line.strip(): continue
@@ -219,7 +220,7 @@ def read_problem_file(filePath, env):
                     # For each property in current line search for the ones immutable and add them to the environment
                     for prop in list(filter(lambda elm: '=' not in elm, re.findall(r"\((.*?)\)", line.strip()))):  # Omit properties with '='
                         if property_in_predicates(list(filter(lambda elem: elem != '', prop.strip().split(" ")))[0], env.immutablePreds):
-                            env.immutableProps.add(f"({prop.strip()})")
+                            immutableProps.add(f"({prop.strip()})")
                         else:
                             init_state.append(prop.strip())
 
@@ -240,7 +241,7 @@ def read_problem_file(filePath, env):
 
                     goal_state.append(bit)
 
-    return init_state, goal_state
+    return init_state, goal_state, frozenset(immutableProps)
 
 '''
 Checks whether the prop_name exists in any of the predicates in the 2nd parameter
