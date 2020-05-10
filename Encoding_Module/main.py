@@ -1,5 +1,5 @@
 import time
-import speedUp
+import exmod
 
 from environment import *
 
@@ -57,7 +57,7 @@ print(env.is_legal("(board p7 slow0-0 n1 n2 n8)"))
 print(env.is_legal("(board p9 slow0-0 n2 n0 n1)"))
 
 start_time = time.time()
-legalActionsAtInitialState = speedUp.get_legal_actions(env.state, env.immutableProps, env.allActions)
+legalActionsAtInitialState = exmod.get_legal_actions(env.state, env.immutableProps, env.allActions)
 colorPrint(str(time.time() - start_time), YELLOW)
 
 print(legalActionsAtInitialState)
