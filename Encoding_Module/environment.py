@@ -1,8 +1,10 @@
 import re
 import random
+import numpy as np
 import itertools
 import speedUp
 import exmod
+import fast
 
 from fileIO import *
 
@@ -47,6 +49,8 @@ class Environment:
         # This will be useful to form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
         self.get_all_actions()
+
+        self.allActionKeys = np.array(list(self.allActions.keys()))
 
         # Initialize the state encoding as per the init block in the problem file
         self.reset()
@@ -251,9 +255,11 @@ class Environment:
         return self.state
 
     def sample(self):
+        np.random.shuffle(self.allActionKeys)
+        return fast.get_random_legal_action(self.state, self.immutableProps, self.allActions, self.allActionKeys)
         # return random.sample(self.get_legal_actions(), 1)[0]
-        return random.sample(speedUp.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
-        # return random.sample(self.get_legal_actions(), 1)[0]
+        # return random.sample(speedUp.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
+        # return random.sample(exmod.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
 
     def step(self, action):
         for eff, value in self.allActions[action]["effect"].items():
