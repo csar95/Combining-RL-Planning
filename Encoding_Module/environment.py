@@ -2,6 +2,7 @@ import re
 import random
 import itertools
 import speedUp
+import exmod
 
 from fileIO import *
 
@@ -250,6 +251,7 @@ class Environment:
         return self.state
 
     def sample(self):
+        # return random.sample(self.get_legal_actions(), 1)[0]
         return random.sample(speedUp.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
         # return random.sample(self.get_legal_actions(), 1)[0]
 

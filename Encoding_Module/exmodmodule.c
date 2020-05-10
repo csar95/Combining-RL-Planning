@@ -33,8 +33,34 @@ static PyObject* exmod_get_legal_actions(PyObject *self, PyObject *args)
   return Py_BuildValue("O", legalActions);
 }
 
+static PyObject* exmod_is_legal(PyObject *self, PyObject *args)
+{
+  PyObject *state, *preconditions, *immutableProps;
+
+  if (!PyArg_ParseTuple(args, "OOO", &state, &immutableProps, &preconditions)) return NULL;
+
+  PyObject *pre, *targetValue, *stateValue;
+  Py_ssize_t pos = 0;
+  int legal = 1;  // True
+
+  while (PyDict_Next(preconditions, &pos, &pre, &targetValue))
+  {
+    stateValue = PyDict_GetItem(state, pre);
+
+    if ((stateValue == NULL && PySet_Contains(immutableProps, pre) != 1) ||  // If pre not in state and pre is not found in immutableProps
+        (stateValue != NULL && PyObject_RichCompareBool(PyDict_GetItem(state, pre), targetValue, Py_EQ) == 0))  // If pre in state and it is False that they are equal
+    {
+      legal = 0;  // False
+      break;
+    }
+  }
+
+  return Py_BuildValue("i", legal);
+}
+
 static PyMethodDef exmod_methods[] = {
   {"get_legal_actions", exmod_get_legal_actions, METH_VARARGS, "Get legal actions from the current state"},
+  {"is_legal", exmod_is_legal, METH_VARARGS, "Returns whether the action is legal"},
   {NULL, NULL, 0, NULL}
 };
 
