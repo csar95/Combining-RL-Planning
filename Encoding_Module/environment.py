@@ -5,6 +5,9 @@ import itertools
 import speedUp
 import exmod
 import fast
+import json
+from py4j.java_gateway import JavaGateway
+from py4j.java_collections import SetConverter, ListConverter
 
 from fileIO import *
 
@@ -13,8 +16,11 @@ class Environment:
 
     domainPath = RESOURCES_FOLDER + "domain.pddl"
     problemPath = RESOURCES_FOLDER + "problem.pddl"
+    gateway = JavaGateway()
 
     def __init__(self):
+        self.fastMod = self.gateway.entry_point
+
         self.objIndependentPreds = set([])
         self.objDependentPreds = set([])
         self.immutablePreds = set([])
@@ -50,10 +56,23 @@ class Environment:
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
         self.get_all_actions()
 
-        self.allActionKeys = np.array(list(self.allActions.keys()))
+        # self.allActionKeys = np.array(list(self.allActions.keys()))
 
         # Initialize the state encoding as per the init block in the problem file
         self.reset()
+
+        # ------------------------------------------------------------------------------------------------------------ #
+
+        self.fastMod.set_immutable_props(SetConverter().convert(self.immutableProps, self.gateway._gateway_client))
+
+        f = open("allActions.txt", "w")
+        f.write(json.dumps(self.allActions))
+        f.close()
+
+        self.fastMod.set_all_actions()
+        self.fastMod.set_all_actions_keys(ListConverter().convert(list(self.allActions.keys()), self.gateway._gateway_client))
+
+        # ------------------------------------------------------------------------------------------------------------ #
 
         colorPrint("\nENVIRONMENT IS READY\n", MAGENTA)
 
@@ -255,8 +274,11 @@ class Environment:
         return self.state
 
     def sample(self):
-        np.random.shuffle(self.allActionKeys)
-        return fast.get_random_legal_action(self.state, self.immutableProps, self.allActions, self.allActionKeys)
+        return self.fastMod.get_random_legal_action(json.dumps(self.state))  # 0.02662751793861389s de media en 1000 pruebas
+
+        # np.random.shuffle(self.allActionKeys)
+        # return fast.get_random_legal_action(self.state, self.immutableProps, self.allActions, self.allActionKeys)  # 0.08049423384666443s de media en 1000 pruebas
+
         # return random.sample(self.get_legal_actions(), 1)[0]
         # return random.sample(speedUp.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
         # return random.sample(exmod.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
