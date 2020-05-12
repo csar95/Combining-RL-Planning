@@ -1,8 +1,12 @@
 import time
+import subprocess
 from environment import *
 
 
+javaAppProcess = subprocess.Popen('java -jar ../Encoding_Module/fastMod.jar', shell=True)
 env = Environment()
+
+# END OF ENVIRONMENT INITIALIZATION ---------------------------------------------------------------------------------- #
 
 colorPrint("\n------- TYPES -------", CYAN)
 print(env.types)
@@ -51,9 +55,41 @@ print(env.allActions["(move-up-slow slow0-0 n2 n8)"])
 print("(move-up-slow slow0-0 n16 n16)" in env.allActions)
 print(len(env.allActions))
 
-print(env.is_legal("(board p7 slow0-0 n1 n2 n3)"))
-print(env.is_legal("(board p9 slow0-0 n2 n0 n1)"))
+# ------------------------------------------------------------------------ #
+
+print(f'Is (board p7 slow0-0 n1 n2 n3) legal? {env.is_legal("(board p7 slow0-0 n1 n2 n3)")}')
+print(f'Is (board p9 slow0-0 n2 n0 n1) legal? {env.is_legal("(board p9 slow0-0 n2 n0 n1)")}')
+
+colorPrint("\n------- ALL LEGAL ACTIONS FROM THE CURRENT STATE -------", CYAN)
 
 start_time = time.time()
-legalActionsAtInitialState = env.sample()
+legalActionsAtInitialState = env.get_legal_actions()
 colorPrint(str(time.time() - start_time), YELLOW)
+
+print(legalActionsAtInitialState)
+print(len(legalActionsAtInitialState))
+
+colorPrint("\n------- AVERAGE TIME TO GET A RANDOM LEGAL ACTION FROM CURRENT STATE -------", CYAN)
+
+times = []
+for _ in range(20):
+    start_time = time.time()
+    action = env.sample()
+    times.append(time.time() - start_time)
+
+colorPrint(str(sum(times)/len(times)), YELLOW)
+
+print(action)
+print(env.allActions[action])
+
+colorPrint("\n------- TAKE PREVIOUS ACTION FROM CURRENT STATE -------", CYAN)
+
+start_time = time.time()
+newObservation, reward, done = env.step(action)
+colorPrint(str(time.time() - start_time), YELLOW)
+print(f"{reward} {done} {newObservation}")
+
+# END OF PROGRAM ----------------------------------------------------------------------------------------------------- #
+
+env.gateway.shutdown()
+javaAppProcess.kill()
