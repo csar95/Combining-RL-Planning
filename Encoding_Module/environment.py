@@ -6,6 +6,7 @@ import speedUp
 import exmod
 import fast
 import json
+import os
 from py4j.java_gateway import JavaGateway
 from py4j.java_collections import SetConverter, ListConverter
 
@@ -19,8 +20,6 @@ class Environment:
     gateway = JavaGateway()
 
     def __init__(self):
-        self.fastMod = self.gateway.entry_point
-
         self.objIndependentPreds = set([])
         self.objDependentPreds = set([])
         self.immutablePreds = set([])
@@ -63,8 +62,11 @@ class Environment:
 
         # ------------------------------------------------------------------------------------------------------------ #
 
+        self.fastMod = self.gateway.entry_point
+
         self.fastMod.set_immutable_props(SetConverter().convert(self.immutableProps, self.gateway._gateway_client))
 
+        if os.path.exists("allActions.txt"): os.remove("allActions.txt")
         f = open("allActions.txt", "w")
         f.write(json.dumps(self.allActions))
         f.close()
@@ -113,10 +115,8 @@ class Environment:
             # Add all combinations of the objects that the current action can have as parameters to the set containing
             # all possible actions in this environment
             for tup in list(itertools.product(*poolOfObjects)):
-                params = ""
-                for elem in tup: params += (" " + elem)
-
                 newAction = {}
+                newActionIsValid = True
 
                 # Match parameters in tup with the param. names in the current action
                 translation = {}
@@ -126,18 +126,22 @@ class Environment:
                 pattern = re.compile("|".join(translation.keys()))
 
                 # Get rewards of the current action with the parameters substituted
-                newActionIsValid = True
                 reward = {}
                 for func, value in definition["reward"].items():
-                    if value.isdigit():
+                    funcKey = pattern.sub(lambda m: translation[re.escape(m.group(0))], func)
+
+                    if funcKey not in self.allFunctions:
+                        newActionIsValid = False  # E.g., (increase (func) (value)) Func is not found in self.allFunctions
+                        break
+                    elif value.isdigit():
                         v = int(value)
                     elif pattern.sub(lambda m: translation[re.escape(m.group(0))], value) in self.allFunctions:
                         v = int(self.allFunctions[pattern.sub(lambda m: translation[re.escape(m.group(0))], value)])
                     else:
-                        newActionIsValid = False
+                        newActionIsValid = False  # E.g., (increase (func) (value)) Value is not found in self.allFunctions
                         break
 
-                    reward[ pattern.sub(lambda m: translation[re.escape(m.group(0))], func) ] = v
+                    reward[funcKey] = v
 
                 if not newActionIsValid:
                     continue
@@ -148,17 +152,46 @@ class Environment:
                 preconditions = {}
                 for pred in definition["precondition"]:
                     targetValue = 0 if pred[0] == '!' else 1
-                    preconditions[ pattern.sub(lambda m: translation[re.escape(m.group(0))], pred.lstrip('!')) ] = targetValue
 
-                newAction["precondition"] = preconditions
+                    precondition = pattern.sub(lambda m: translation[re.escape(m.group(0))], pred.lstrip('!'))
+                    if precondition not in self.state.keys() and\
+                            ((targetValue == 1 and precondition not in self.immutableProps) or\
+                            (targetValue == 0 and precondition in self.immutableProps)):
+                        # The precondition predicate of the current action is:
+                        # - Not present in the state keys AND
+                        # - It is supposed to be True but is not in the immutableProps set OR It is supposed to be False but is in the immutableProps set
+                        newActionIsValid = False
+                        break
+
+                    preconditions[precondition] = targetValue
+
+                if not newActionIsValid:
+                    continue
+                else:
+                    newAction["precondition"] = preconditions
 
                 # Get effects of the current action with the parameters substituted
                 effects = {}
                 for eff in definition["effect"]:
                     targetValue = 0 if eff[0] == '!' else 1
-                    effects[ pattern.sub(lambda m: translation[re.escape(m.group(0))], eff.lstrip('!')) ] = targetValue
 
-                newAction["effect"] = effects
+                    effect = pattern.sub(lambda m: translation[re.escape(m.group(0))], eff.lstrip('!'))
+                    if effect not in self.state.keys():
+                        # The effect predicate of the current action is not present in the state keys
+                        # The immutableProps are not taken into account here because they cannot appear in any action effects
+                        newActionIsValid = False
+                        break
+
+                    effects[effect] = targetValue
+
+                if not newActionIsValid:
+                    continue
+                else:
+                    newAction["effect"] = effects
+
+                # At this point newActionIsValid is True, otherwise it would have continued to the next combination of objects
+                params = ""
+                for elem in tup: params += (" " + elem)
 
                 self.allActions[f"({action}{params})"] = newAction
 
@@ -274,10 +307,10 @@ class Environment:
         return self.state
 
     def sample(self):
-        return self.fastMod.get_random_legal_action(json.dumps(self.state))  # 0.02662751793861389s de media en 1000 pruebas
+        return self.fastMod.get_random_legal_action(json.dumps(self.state))  # 0.001198493719100952s (less actions) | 0.02662751793861389s (before)
 
         # np.random.shuffle(self.allActionKeys)
-        # return fast.get_random_legal_action(self.state, self.immutableProps, self.allActions, self.allActionKeys)  # 0.08049423384666443s de media en 1000 pruebas
+        # return fast.get_random_legal_action(self.state, self.immutableProps, self.allActions, self.allActionKeys)  # 0.0014347076416015626 (less actions) | 0.08049423384666443s (before)
 
         # return random.sample(self.get_legal_actions(), 1)[0]
         # return random.sample(speedUp.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
