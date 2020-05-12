@@ -1,9 +1,6 @@
 import re
-import random
 import numpy as np
 import itertools
-import speedUp
-import exmod
 import fast
 import json
 import os
@@ -308,13 +305,10 @@ class Environment:
 
     def sample(self):
         return self.fastMod.get_random_legal_action(json.dumps(self.state))  # 0.001198493719100952s (less actions) | 0.02662751793861389s (before)
-
+        # ------------ ALTERNATIVE ------------ #
         # np.random.shuffle(self.allActionKeys)
         # return fast.get_random_legal_action(self.state, self.immutableProps, self.allActions, self.allActionKeys)  # 0.0014347076416015626 (less actions) | 0.08049423384666443s (before)
-
-        # return random.sample(self.get_legal_actions(), 1)[0]
-        # return random.sample(speedUp.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
-        # return random.sample(exmod.get_legal_actions(self.state, self.immutableProps, self.allActions), 1)[0]
+        # ------------ ALTERNATIVE ------------ #
 
     def step(self, action):
         for eff, value in self.allActions[action]["effect"].items():

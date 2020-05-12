@@ -1,6 +1,4 @@
 import time
-import exmod
-
 from environment import *
 
 
@@ -57,10 +55,5 @@ print(env.is_legal("(board p7 slow0-0 n1 n2 n3)"))
 print(env.is_legal("(board p9 slow0-0 n2 n0 n1)"))
 
 start_time = time.time()
-legalActionsAtInitialState = exmod.get_legal_actions(env.state, env.immutableProps, env.allActions)
+legalActionsAtInitialState = env.sample()
 colorPrint(str(time.time() - start_time), YELLOW)
-
-print(legalActionsAtInitialState)
-print(len(legalActionsAtInitialState))
-
-print(random.sample(legalActionsAtInitialState, 1)[0])
