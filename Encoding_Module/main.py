@@ -49,7 +49,7 @@ def run_test():
     colorPrint("\n------- ALL ACTIONS IN THE ENVIRONMENT -------", CYAN)
     # print(env.allActions["(move-up-slow slow0-0 n2 n8)"])
     # print("(move-up-slow slow0-0 n16 n16)" in env.allActions)
-    # print(env.allActions)
+    print(env.allActions)
     print(len(env.allActions))
 
     # ------------------------------------------------------------------------ #
@@ -88,11 +88,5 @@ def run_test():
 
 
 if __name__ == '__main__':
-    javaAppProcess = subprocess.Popen('java -jar ../Encoding_Module/fastMod.jar', shell=True)
-    try:
-        env = Environment()
-        env.pass_info_to_java()
-        run_test()
-    finally:
-        env.gateway.shutdown()
-        javaAppProcess.kill()
+    env = Environment()
+    run_test()

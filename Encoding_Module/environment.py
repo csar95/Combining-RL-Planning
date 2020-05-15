@@ -2,20 +2,14 @@ import re
 import numpy as np
 import itertools
 import fast
-import json
-import os
-import sys
-from py4j.java_gateway import JavaGateway
-from py4j.java_collections import SetConverter, ListConverter
 
 from fileIO import *
 
 
 class Environment:
 
-    domainPath = RESOURCES_FOLDER + "domain1.pddl"
-    problemPath = RESOURCES_FOLDER + "problem1.pddl"
-    gateway = JavaGateway()
+    domainPath = RESOURCES_FOLDER + "domain.pddl"
+    problemPath = RESOURCES_FOLDER + "problem.pddl"
 
     def __init__(self):
         self.objIndependentPreds = set([])
@@ -55,34 +49,12 @@ class Environment:
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
         self.get_all_actions()
 
-        # self.allActionKeys = np.array(list(self.allActions.keys()))
+        self.allActionKeys = np.array(list(self.allActions.keys()))
 
         # Initialize the state encoding as per the init block in the problem file
         self.reset()
 
         colorPrint("\nEnvironment is ready", MAGENTA)
-
-    def pass_info_to_java(self):
-        colorPrint("\nPassing environment information to Java...\n", MAGENTA)
-
-        self.fastMod = self.gateway.entry_point
-
-        if os.path.exists("../Learning_Module/allActions.txt"): os.remove("../Learning_Module/allActions.txt")
-        f = open("../Learning_Module/allActions.txt", "w")
-        f.write(json.dumps(self.allActions))
-        f.close()
-
-        resp = self.fastMod.set_all_actions()
-        if resp != 0:
-            if resp == 1: colorPrint("ERROR: Not able to read the allActions JSON file", RED)
-            if resp == 2: colorPrint("ERROR: Not able to set the allActions dictionary", RED)
-            exit(resp)
-
-        if self.fastMod.set_all_actions_keys(
-                ListConverter().convert(list(self.allActions.keys()), self.gateway._gateway_client)) != 0:
-            colorPrint("ERROR: Not able to set the allActionsKeys list", RED)
-            exit(1)
-
 
     '''
     Adds all forms of the current predicate to the environment state
@@ -243,30 +215,29 @@ class Environment:
     Returns all legal actions from the current state
     '''
     def get_legal_actions(self):
-        return np.array(self.fastMod.get_legal_actions( ListConverter().convert(self.state.tolist(), self.gateway._gateway_client) ))
-        # legalActions = set([])
-        #
-        # add = legalActions.add
-        # items = dict.items
-        # state = self.state
-        # immutableProps = self.immutableProps
-        #
-        # for action, definition in items(self.allActions):
-        #
-        #     legal = True
-        #     for pre, targetValue in items(definition["precondition"]):
-        #         try:
-        #             if state[pre] != targetValue:
-        #                 legal = False
-        #                 break
-        #         except KeyError:
-        #             if pre not in immutableProps:
-        #                 legal = False
-        #                 break
-        #
-        #     if legal: add(action)
-        #
-        # return legalActions
+        legalActions = set([])
+
+        add = legalActions.add
+        items = dict.items
+        state = self.state
+        immutableProps = self.immutableProps
+
+        for action, definition in items(self.allActions):
+
+            legal = True
+            for pre, targetValue in items(definition["precondition"]):
+                try:
+                    if state[pre] != targetValue:
+                        legal = False
+                        break
+                except KeyError:
+                    if pre not in immutableProps:
+                        legal = False
+                        break
+
+            if legal: add(action)
+
+        return legalActions
 
     '''
     Returns whether the action preconditions are satisfied in the current state or not
@@ -313,15 +284,8 @@ class Environment:
         return self.state
 
     def sample(self):
-        action = self.fastMod.get_random_legal_action(ListConverter().convert(self.state.tolist(), self.gateway._gateway_client))  # 0.001198493719100952s (less actions) | 0.02662751793861389s (before)
-        if not action:
-            colorPrint("ERROR: Not able to find a legal action from current state", RED)
-            exit(1)
-        return action
-        # ------------ ALTERNATIVE ------------ #
-        # np.random.shuffle(self.allActionKeys)
-        # return fast.get_random_legal_action(self.state, self.allActions, self.allActionKeys)  # 0.0014347076416015626 (less actions) | 0.08049423384666443s (before)
-        # ------------ ALTERNATIVE ------------ #
+        np.random.shuffle(self.allActionKeys)
+        return fast.get_random_legal_action(self.state, self.allActions, self.allActionKeys)  # 0.0014347076416015626 (less actions) | 0.08049423384666443s (before)
 
     def step(self, action):
         for eff, value in self.allActions[action]["effect"].items():

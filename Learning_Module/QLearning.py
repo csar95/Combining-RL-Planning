@@ -21,11 +21,5 @@ def run_test():
 
 
 if __name__ == '__main__':
-    javaAppProcess = subprocess.Popen('java -jar ../Encoding_Module/fastMod.jar', shell=True)
-    try:
-        env = Environment()
-        env.pass_info_to_java()
-        run_test()
-    finally:
-        env.gateway.shutdown()
-        javaAppProcess.kill()
+    env = Environment()
+    run_test()
