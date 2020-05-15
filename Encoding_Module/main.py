@@ -1,4 +1,5 @@
 import time
+import numpy as np
 import subprocess
 from environment import *
 
@@ -60,11 +61,12 @@ def run_test():
     colorPrint("\n------- ALL LEGAL ACTIONS FROM THE CURRENT STATE -------", CYAN)
 
     start_time = time.time()
-    legalActionsAtInitialState = env.get_legal_actions()
+    idxOfLegalActions = env.get_legal_actions()
     colorPrint(str(time.time() - start_time), YELLOW)
 
-    print(legalActionsAtInitialState)
-    print(len(legalActionsAtInitialState))
+    print(idxOfLegalActions)
+    print(idxOfLegalActions.size)
+    print(env.allActionsKeys[idxOfLegalActions])
 
     colorPrint("\n------- AVERAGE TIME TO GET A RANDOM LEGAL ACTION FROM CURRENT STATE -------", CYAN)
 
@@ -77,7 +79,9 @@ def run_test():
     colorPrint(str(sum(times)/len(times)), YELLOW)
 
     print(action)
-    print(env.allActions[action])
+    print(env.allActionsKeys[action])
+    print(env.allActions[env.allActionsKeys[action]])
+    print(idxOfLegalActions)
 
     colorPrint("\n------- TAKE PREVIOUS ACTION FROM CURRENT STATE -------", CYAN)
 

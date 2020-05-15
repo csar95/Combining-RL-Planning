@@ -99,6 +99,7 @@ class DQNAgent:
         model = Sequential()
 
         model.add(Flatten())
+        # TODO: AUTOMATE THIS
         model.add(Dense(units=500, activation="relu"))
         model.add(Dense(units=5000, activation="relu"))
         model.add(Dense(units=50000, activation="relu"))
@@ -112,7 +113,7 @@ class DQNAgent:
         self.replay_memory.append(transition)
 
     def get_qs(self, state):
-        return self.model.predict(np.array(state))[0]
+        return self.model.predict(state)[0]
 
     def train(self, terminal_state, step):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
@@ -166,19 +167,22 @@ for episode in range(1, EPISODES+1):
     episode_reward = 0
     step = 1
     done = False
-    current_state = env.reset()  # TODO: THE STATE SHOULD BE A LIST/ARRAY, NOT A DICTIONARY
+    current_state = env.reset()
 
     while not done:
         if np.random.random() > epsilon:
-            action = np.argmax(agent.get_qs(current_state))  # Integer
+            actionsQValues = agent.get_qs(current_state)
+            legalActionsIds = env.get_legal_actions()
+            # Out of all legal actions ids in the current state, get the one with the highest value in actionsQValues
+            action = legalActionsIds[ np.argmax(actionsQValues[legalActionsIds]) ]
         else:
-            action = env.sample()  # String
+            action = env.sample()
 
         new_state, reward, done = env.step(action)
 
         episode_reward += reward
 
-        agent.update_replay_memory((current_state, action, reward, new_state, done))  # TODO: CHECK THIS - Action should be an Integer here
+        agent.update_replay_memory((current_state, action, reward, new_state, done))
         agent.train(done, step)
 
         current_state = new_state

@@ -2,6 +2,7 @@ import re
 import numpy as np
 import itertools
 import fast
+from copy import deepcopy
 
 from fileIO import *
 
@@ -49,7 +50,7 @@ class Environment:
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
         self.get_all_actions()
 
-        self.allActionKeys = np.array(list(self.allActions.keys()))
+        self.allActionsKeys = np.array(list(self.allActions.keys()))
 
         # Initialize the state encoding as per the init block in the problem file
         self.reset()
@@ -212,10 +213,10 @@ class Environment:
         return poolOfObjects
 
     '''
-    Returns all legal actions from the current state
+    Returns an array of all legal actions from the current state
     '''
     def get_legal_actions(self):
-        return fast.get_legal_actions(self.state, self.allActions, self.allActionKeys)
+        return np.array(fast.get_legal_actions(self.state, self.allActions, self.allActionsKeys))
 
     '''
     Returns whether the action preconditions are satisfied in the current state or not
@@ -241,7 +242,8 @@ class Environment:
         return True
 
     '''
-    Returns the reward obtained taking this action based on the increase keyword in the definition of the action
+    Takes the action string
+    Returns the reward obtained after taking that action based on the increase keyword in the definition of the action
     '''
     def get_reward(self, action):
         reward = 0
@@ -251,6 +253,10 @@ class Environment:
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
+    '''
+    Applies the initial state to the state array
+    Returns the state array
+    '''
     def reset(self):
         for prop in self.init_state:
             bit = '('
@@ -261,15 +267,25 @@ class Environment:
 
         return self.state
 
+    '''
+    Returns the index at self.allActionsKeys of the 'legal' action selected at random from all possible actions
+    '''
     def sample(self):
-        np.random.shuffle(self.allActionKeys)
-        return fast.get_random_legal_action(self.state, self.allActions, self.allActionKeys)  # 0.0014347076416015626 (less actions) | 0.08049423384666443s (before)
+        allActionsKeys = deepcopy(self.allActionsKeys)
+        np.random.shuffle(allActionsKeys)
+        return np.where(self.allActionsKeys == fast.get_random_legal_action(self.state, self.allActions, allActionsKeys))[0][0]
 
+    '''
+    Takes the index of a legal action from self.allActionsKeys and applies the effect to the state array
+    Returns the state array, the value of the reward and whether the state satisfies the goal state
+    '''
     def step(self, action):
-        for eff, value in self.allActions[action]["effect"].items():
+        actionKey = self.allActionsKeys[action]
+
+        for eff, value in self.allActions[actionKey]["effect"].items():
             self.state[ eff ] = value
 
         if self.is_done():
             return self.state, 100, True
         else:
-            return self.state, self.get_reward(action), False
+            return self.state, self.get_reward(actionKey), False
