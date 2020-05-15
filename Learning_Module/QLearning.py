@@ -3,27 +3,29 @@ import subprocess
 from environment import *
 
 
-javaAppProcess = subprocess.Popen('java -jar ../Encoding_Module/fastMod.jar', shell=True)
-env = Environment()
+def run_test():
+    times = []
+    for _ in range(1000):
+        start_time = time.time()
+        action = env.sample()
+        times.append(time.time() - start_time)
 
-# END OF ENVIRONMENT INITIALIZATION ---------------------------------------------------------------------------------- #
+    colorPrint(str(sum(times)/len(times)), YELLOW)
 
-times = []
-for _ in range(1000):
+    print(action)
+
     start_time = time.time()
-    action = env.sample()
-    times.append(time.time() - start_time)
+    newObservation, reward, done = env.step(action)
+    colorPrint(str(time.time() - start_time), YELLOW)
+    print(f"{reward} {done} {newObservation}")
 
-colorPrint(str(sum(times)/len(times)), YELLOW)
 
-print(action)
-
-start_time = time.time()
-newObservation, reward, done = env.step(action)
-colorPrint(str(time.time() - start_time), YELLOW)
-print(f"{reward} {done} {newObservation}")
-
-# END OF PROGRAM ----------------------------------------------------------------------------------------------------- #
-
-env.gateway.shutdown()
-javaAppProcess.kill()
+if __name__ == '__main__':
+    javaAppProcess = subprocess.Popen('java -jar ../Encoding_Module/fastMod.jar', shell=True)
+    try:
+        env = Environment()
+        env.pass_info_to_java()
+        run_test()
+    finally:
+        env.gateway.shutdown()
+        javaAppProcess.kill()

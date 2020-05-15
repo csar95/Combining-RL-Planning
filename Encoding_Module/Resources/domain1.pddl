@@ -1,86 +1,63 @@
-;
-; A version of the logistics domain with typing and type hierarchies
-;
-(define (domain domain3)
-    (:requirements
-        :strips :typing
-    )
+(define (domain elevators-sequencedstrips)
+  (:requirements :typing :action-costs)
+  (:types
+    elevator - object
+    slow-elevator fast-elevator - elevator
+   	passenger - object
+    count - object
+  )
 
-    (:types
-        object
-        city
-        truck  airplane -  vehicle
-        office      airport - location
-    )
+(:predicates
+	(passenger-at ?person - passenger ?floor - count)
+	(boarded ?person - passenger ?lift - elevator)
+	(lift-at ?lift - elevator ?floor - count)
+	(reachable-floor ?lift - elevator ?floor - count)
+	(above ?floor1 - count ?floor2 - count)
+	(  passengers   ?lift - elevator ?n - count)
+	(can-hold ?lift - elevator ?n - count)
+	(next ?n1 - count ?n2 - count)
+)
 
-    (:predicates
-        (loc ?l - location ?c - city)
-        (vehicle_at ?v -    vehicle   ?l  - location)
-        ( object_at ?o -  object ?l -  location)
-        (in  ?p - object ?v - vehicle)
+(:functions
+    (total-cost) - number
+    (travel-slow ?f1 - count ?f2 - count) - number
+    (travel-fast ?f1 - count ?f2 - count) - number
+)
 
-        (travelling )
-        (   is_damaged)
-        (   end_missions  )
-    )
+(:action move-up-slow
+  :parameters (?lift - slow-elevator ?f1 - count ?f2 - count )
+  :precondition (and (lift-at ?lift ?f1) (above ?f1 ?f2 ) (reachable-floor ?lift ?f2) )
+  :effect (and (lift-at ?lift ?f2) (not (lift-at ?lift ?f1)) (increase (total-cost) (travel-slow ?f1 ?f2)))
+)
 
-    (:action load
-        :parameters 
-            (?o - object ?v - vehicle ?l - location)
-        :precondition
-            (and
-		        (vehicle_at ?v ?l)
-                (object_at ?o ?l)
-            )
-        :effect
-            (and
-                (in ?o ?v)
-                (not (object_at ?o ?l))
-            )
-    )
+(:action move-down-slow
+  :parameters (?lift - slow-elevator ?f1 - count ?f2 - count )
+  :precondition (and (lift-at ?lift ?f1) (above ?f2 ?f1 ) (reachable-floor ?lift ?f2) )
+  :effect (and (lift-at ?lift ?f2) (not (lift-at ?lift ?f1)) (increase (total-cost) (travel-slow ?f2 ?f1)))
+)
 
-    (:action unload
-        :parameters
-            (?o - object ?v - vehicle ?l - location)
-        :precondition
-            (and
-		        (vehicle_at ?v ?l)
-                (in ?o ?v)
-            )
-        :effect
-            (and
-                (object_at ?o ?l)
-                (not (in ?o ?v))
-            )
-    )
+(:action move-up-fast
+  :parameters (?lift - fast-elevator ?f1 - count ?f2 - count )
+  :precondition (and (lift-at ?lift ?f1) (above ?f1 ?f2 ) (reachable-floor ?lift ?f2) )
+  :effect (and (lift-at ?lift ?f2) (not (lift-at ?lift ?f1)) (increase (total-cost) (travel-fast ?f1 ?f2)))
+)
 
-    (:action drive
-        :parameters
-            (?t - truck ?c - city ?l1 - location ?l2 - location)
-        :precondition
-            (and
-		        (vehicle_at ?t ?l1)
-                (loc ?l1 ?c)
-                (loc ?l2 ?c)
-            )
-        :effect
-            (and
-                (vehicle_at ?t ?l2)
-                (not (vehicle_at ?t ?l1))
-            )
-    )
+(:action move-down-fast
+  :parameters (?lift - fast-elevator ?f1 - count ?f2 - count )
+  :precondition (and (lift-at ?lift ?f1) (above ?f2 ?f1 ) (reachable-floor ?lift ?f2) )
+  :effect (and (lift-at ?lift ?f2) (not (lift-at ?lift ?f1)) (increase (total-cost) (travel-fast ?f2 ?f1)))
+)
 
-    (:action fly
-        :parameters
-            (?p - airplane ?a1 - airport ?a2 - airport)
-        :precondition
-            (and
-		        (vehicle_at ?p ?a1)
-            )
-        :effect
-            (and 
-                (vehicle_at ?p ?a2)
-                (not (vehicle_at ?p ?a1))
-            )
-    )
+(:action board
+  :parameters (?p - passenger ?lift - elevator ?f - count ?n1 - count ?n2 - count)
+  :precondition (and  (lift-at ?lift ?f) (passenger-at ?p ?f) (passengers ?lift ?n1) (next ?n1 ?n2) (can-hold ?lift ?n2) )
+  :effect (and (not (passenger-at ?p ?f)) (boarded ?p ?lift) (not (passengers ?lift ?n1)) (passengers ?lift ?n2) )
+)
+
+(:action leave
+  :parameters (?p - passenger ?lift - elevator ?f - count ?n1 - count ?n2 - count)
+  :precondition (and  (lift-at ?lift ?f) (boarded ?p ?lift) (passengers ?lift ?n1) (next ?n2 ?n1) )
+  :effect (and (passenger-at ?p ?f) (not (boarded ?p ?lift)) (not (passengers ?lift ?n1)) (passengers ?lift ?n2) )
+)
+
 )

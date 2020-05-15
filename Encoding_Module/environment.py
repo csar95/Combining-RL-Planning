@@ -13,8 +13,8 @@ from fileIO import *
 
 class Environment:
 
-    domainPath = RESOURCES_FOLDER + "domain.pddl"
-    problemPath = RESOURCES_FOLDER + "problem.pddl"
+    domainPath = RESOURCES_FOLDER + "domain1.pddl"
+    problemPath = RESOURCES_FOLDER + "problem1.pddl"
     gateway = JavaGateway()
 
     def __init__(self):
@@ -31,7 +31,7 @@ class Environment:
         # allFunctions is a dictionary of this type --> '(travel-slow n0 n1)': 6, '(travel-slow n0 n2)': 7, '(travel-slow n0 n3)': 8, '(travel-slow n0 n4)': 9, ..., '(total-cost)': 0
         self.allFunctions = {}
 
-        self.state = {}
+        self.stateTerms = {}
 
         # Reading domain file. Obtain the object dependent and independent properties
         colorPrint("Reading domain file...", MAGENTA)
@@ -47,7 +47,9 @@ class Environment:
 
         # Add the independent predicates to the state
         for pred in self.objIndependentPreds:
-            self.state[f"({pred})"] = 0
+            self.stateTerms[f"({pred})"] = len(self.stateTerms)
+
+        self.state = np.zeros(len(self.stateTerms), dtype=int)
 
         # This will be useful to form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
@@ -58,16 +60,15 @@ class Environment:
         # Initialize the state encoding as per the init block in the problem file
         self.reset()
 
-        # ------------------------------------------------------------------------------------------------------------ #
+        colorPrint("\nEnvironment is ready", MAGENTA)
+
+    def pass_info_to_java(self):
+        colorPrint("\nPassing environment information to Java...\n", MAGENTA)
 
         self.fastMod = self.gateway.entry_point
 
-        if self.fastMod.set_immutable_props(SetConverter().convert(self.immutableProps, self.gateway._gateway_client)) != 0:
-            colorPrint("ERROR: Not able to set the immutableProps set", RED)
-            exit(1)
-
-        if os.path.exists("allActions.txt"): os.remove("allActions.txt")
-        f = open("allActions.txt", "w")
+        if os.path.exists("../Learning_Module/allActions.txt"): os.remove("../Learning_Module/allActions.txt")
+        f = open("../Learning_Module/allActions.txt", "w")
         f.write(json.dumps(self.allActions))
         f.close()
 
@@ -77,13 +78,11 @@ class Environment:
             if resp == 2: colorPrint("ERROR: Not able to set the allActions dictionary", RED)
             exit(resp)
 
-        if self.fastMod.set_all_actions_keys(ListConverter().convert(list(self.allActions.keys()), self.gateway._gateway_client)) != 0:
+        if self.fastMod.set_all_actions_keys(
+                ListConverter().convert(list(self.allActions.keys()), self.gateway._gateway_client)) != 0:
             colorPrint("ERROR: Not able to set the allActionsKeys list", RED)
             exit(1)
 
-        # ------------------------------------------------------------------------------------------------------------ #
-
-        colorPrint("\nENVIRONMENT IS READY\n", MAGENTA)
 
     '''
     Adds all forms of the current predicate to the environment state
@@ -109,7 +108,7 @@ class Environment:
         for tup in list(itertools.product(*poolOfObjects)):
             objs = ""
             for elem in tup: objs += (" " + elem)
-            self.state[f"({name}{objs})"] = 0  # Add each term to the dictionary initialized to 0
+            self.stateTerms[f"({name}{objs})"] = len(self.stateTerms)  # Add each term to the dictionary with its position in the array
 
     '''
     Finds a set of all the possible actions that exist in this environment
@@ -124,6 +123,8 @@ class Environment:
             for tup in list(itertools.product(*poolOfObjects)):
                 newAction = {}
                 newActionIsValid = True
+
+                if len(tup) != len(definition["parameters"]): continue
 
                 # Match parameters in tup with the param. names in the current action
                 translation = {}
@@ -161,7 +162,7 @@ class Environment:
                     targetValue = 0 if pred[0] == '!' else 1
 
                     precondition = pattern.sub(lambda m: translation[re.escape(m.group(0))], pred.lstrip('!'))
-                    if precondition not in self.state.keys() and\
+                    if precondition not in self.stateTerms.keys() and\
                             ((targetValue == 1 and precondition not in self.immutableProps) or\
                             (targetValue == 0 and precondition in self.immutableProps)):
                         # The precondition predicate of the current action is:
@@ -170,7 +171,9 @@ class Environment:
                         newActionIsValid = False
                         break
 
-                    preconditions[precondition] = targetValue
+                    # I don't need to include the immutable predicates to check if an action is legal. I'm already checking those thing here
+                    if precondition in self.stateTerms.keys():
+                        preconditions[ self.stateTerms[precondition] ] = targetValue  # Save the position of the predicate
 
                 if not newActionIsValid:
                     continue
@@ -183,13 +186,13 @@ class Environment:
                     targetValue = 0 if eff[0] == '!' else 1
 
                     effect = pattern.sub(lambda m: translation[re.escape(m.group(0))], eff.lstrip('!'))
-                    if effect not in self.state.keys():
+                    if effect not in self.stateTerms.keys():
                         # The effect predicate of the current action is not present in the state keys
                         # The immutableProps are not taken into account here because they cannot appear in any action effects
                         newActionIsValid = False
                         break
 
-                    effects[effect] = targetValue
+                    effects[ self.stateTerms[effect] ] = targetValue
 
                 if not newActionIsValid:
                     continue
@@ -240,7 +243,7 @@ class Environment:
     Returns all legal actions from the current state
     '''
     def get_legal_actions(self):
-        return np.array(self.fastMod.get_legal_actions(json.dumps(self.state)))
+        return np.array(self.fastMod.get_legal_actions( ListConverter().convert(self.state.tolist(), self.gateway._gateway_client) ))
         # legalActions = set([])
         #
         # add = legalActions.add
@@ -270,15 +273,10 @@ class Environment:
     '''
     def is_legal(self, action):
         state = self.state
-        immutableProps = self.immutableProps
 
         for pre, targetValue in self.allActions[action]["precondition"].items():
-            try:
-                if state[pre] != targetValue:
-                    return False
-            except KeyError:
-                if pre not in immutableProps:
-                    return False
+            if state[pre] != targetValue:
+                return False
 
         return True
 
@@ -288,7 +286,7 @@ class Environment:
     def is_done(self):
         for pred in self.goal_state:
             targetValue = 0 if pred[0] == '!' else 1
-            if self.state[pred] != targetValue:
+            if self.state[ self.stateTerms[pred] ] != targetValue:
                 return False
 
         return True
@@ -300,7 +298,7 @@ class Environment:
         reward = 0
         for rwd in self.allActions[action]["reward"].values():
             reward -= rwd
-        return -1 if reward == 0 else reward  # Default reward (penalty) for taking a step: -1
+        return -4 if reward == 0 else reward  # Default reward (penalty) for taking a step: -1 TODO: THIS IS NOT FINAL
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
@@ -310,23 +308,26 @@ class Environment:
             for idx, x in enumerate(list(filter(lambda elem: elem != '', prop.strip().split(" ")))):
                 bit += x if idx == 0 else ' ' + x
             bit += ')'
-            self.state[bit] = 1
+            self.state[ self.stateTerms[bit] ] = 1
 
         return self.state
 
     def sample(self):
-        action = self.fastMod.get_random_legal_action(json.dumps(self.state))  # 0.001198493719100952s (less actions) | 0.02662751793861389s (before)
+        action = self.fastMod.get_random_legal_action(ListConverter().convert(self.state.tolist(), self.gateway._gateway_client))  # 0.001198493719100952s (less actions) | 0.02662751793861389s (before)
         if not action:
             colorPrint("ERROR: Not able to find a legal action from current state", RED)
             exit(1)
         return action
         # ------------ ALTERNATIVE ------------ #
         # np.random.shuffle(self.allActionKeys)
-        # return fast.get_random_legal_action(self.state, self.immutableProps, self.allActions, self.allActionKeys)  # 0.0014347076416015626 (less actions) | 0.08049423384666443s (before)
+        # return fast.get_random_legal_action(self.state, self.allActions, self.allActionKeys)  # 0.0014347076416015626 (less actions) | 0.08049423384666443s (before)
         # ------------ ALTERNATIVE ------------ #
 
     def step(self, action):
         for eff, value in self.allActions[action]["effect"].items():
-            self.state[eff] = value
+            self.state[ eff ] = value
 
-        return self.state, self.get_reward(action), self.is_done()
+        if self.is_done():
+            return self.state, 100, True
+        else:
+            return self.state, self.get_reward(action), False
