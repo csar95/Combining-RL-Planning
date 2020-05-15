@@ -215,29 +215,7 @@ class Environment:
     Returns all legal actions from the current state
     '''
     def get_legal_actions(self):
-        legalActions = set([])
-
-        add = legalActions.add
-        items = dict.items
-        state = self.state
-        immutableProps = self.immutableProps
-
-        for action, definition in items(self.allActions):
-
-            legal = True
-            for pre, targetValue in items(definition["precondition"]):
-                try:
-                    if state[pre] != targetValue:
-                        legal = False
-                        break
-                except KeyError:
-                    if pre not in immutableProps:
-                        legal = False
-                        break
-
-            if legal: add(action)
-
-        return legalActions
+        return fast.get_legal_actions(self.state, self.allActions, self.allActionKeys)
 
     '''
     Returns whether the action preconditions are satisfied in the current state or not
