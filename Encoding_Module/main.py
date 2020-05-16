@@ -61,7 +61,7 @@ def run_test():
     colorPrint("\n------- ALL LEGAL ACTIONS FROM THE CURRENT STATE -------", CYAN)
 
     start_time = time.time()
-    idxOfLegalActions = env.get_legal_actions()
+    idxOfLegalActions = env.get_legal_actions(env.state)
     colorPrint(str(time.time() - start_time), YELLOW)
 
     print(idxOfLegalActions)

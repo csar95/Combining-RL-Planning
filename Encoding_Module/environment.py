@@ -44,7 +44,7 @@ class Environment:
         for pred in self.objIndependentPreds:
             self.stateTerms[f"({pred})"] = len(self.stateTerms)
 
-        self.state = np.zeros(len(self.stateTerms), dtype=int)
+        self.state = np.zeros(len(self.stateTerms), dtype=np.int64)
 
         # This will be useful to form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
@@ -215,8 +215,8 @@ class Environment:
     '''
     Returns an array of all legal actions from the current state
     '''
-    def get_legal_actions(self):
-        return np.array(fast.get_legal_actions(self.state, self.allActions, self.allActionsKeys))
+    def get_legal_actions(self, state):
+        return np.array(fast.get_legal_actions(state, self.allActions, self.allActionsKeys))
 
     '''
     Returns whether the action preconditions are satisfied in the current state or not
@@ -245,11 +245,11 @@ class Environment:
     Takes the action string
     Returns the reward obtained after taking that action based on the increase keyword in the definition of the action
     '''
-    def get_reward(self, action):
+    def get_reward(self, action):  # TODO: DEFINE A BETTER REWARD FUNCTION
         reward = 0
         for rwd in self.allActions[action]["reward"].values():
             reward -= rwd
-        return -4 if reward == 0 else reward  # Default reward (penalty) for taking a step: -1 TODO: THIS IS NOT FINAL
+        return -6 if reward == 0 else reward  # Default reward (penalty) for taking a step: -1
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
@@ -258,6 +258,8 @@ class Environment:
     Returns the state array
     '''
     def reset(self):
+        self.state = np.zeros(len(self.stateTerms), dtype=np.int64)
+
         for prop in self.init_state:
             bit = '('
             for idx, x in enumerate(list(filter(lambda elem: elem != '', prop.strip().split(" ")))):
@@ -286,6 +288,6 @@ class Environment:
             self.state[ eff ] = value
 
         if self.is_done():
-            return self.state, 100, True
+            return self.state, 350, True
         else:
             return self.state, self.get_reward(actionKey), False

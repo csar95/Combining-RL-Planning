@@ -3,7 +3,7 @@ cimport numpy as np
 
 cpdef get_random_legal_action(np.ndarray state, dict allActions, np.ndarray allActionsKeys):
 
-    cdef int legal
+    cdef unsigned int legal, targetValue
 
     items = dict.items
 
@@ -21,9 +21,9 @@ cpdef get_random_legal_action(np.ndarray state, dict allActions, np.ndarray allA
 
 cpdef get_legal_actions(np.ndarray state, dict allActions, np.ndarray allActionsKeys):
 
-    legalActions = []
-
-    cdef int legal
+    cdef list legalActions = []
+    cdef unsigned int legal,  targetValue
+    cdef size_t idx
 
     append = legalActions.append
     items = dict.items
