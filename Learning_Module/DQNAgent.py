@@ -38,8 +38,6 @@ class DQNAgent:
         model.add(Dense(units=int(self.env.state.size+((self.env.allActionsKeys.size-self.env.state.size)/2)),
                         activation="relu",
                         input_shape=(self.env.state.size,)))
-        model.add(Dense(units=25,
-                        activation="relu"))
         model.add(Dense(units=self.env.allActionsKeys.size,
                         activation="softmax"))
 
@@ -98,13 +96,3 @@ class DQNAgent:
         if self.target_update_counter > UPDATE_TARGET_EVERY:
             self.target_model.set_weights(self.model.get_weights())
             self.target_update_counter = 0
-
-
-# TODO:
-#  - PROBLEM 1: WE HAVE A LARGE DISCRETE ACTION SPACE AND WE ARE ONLY INTERESTED IN THE LEGAL ACTIONS
-#  .
-#       IT IS NOT POSSIBLE TO ADAPT THE SOFTMAX ACTIVATION FUNC. SO IT GIVES 0 PROB TO ILLEGAL ACTIONS ???
-#       I CAN GIVE A BIG NEGATIVE REWARD TO ILLEGAL ACTIONS CHOSEN THROUGH GET_QS OR
-#       -->  I CAN f  <--
-#       ALTERNATIVE: ACTOR-CRITIC ALG. ???
-#  .

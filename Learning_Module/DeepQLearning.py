@@ -28,6 +28,7 @@ def deep_q_learning_alg():
         current_state = env_reset()
 
         while not done and step < MAX_STEP_PER_EPISODE:
+            # TODO: ALTERNATIVE (LAST OPTION) MAKE THE MODEL LEARN ILLEGAL ACTIONS BY GIVING A LARGE NEGATIVE REWARD AND NOT CHANGING THE STATE
             if np_random_number() > epsilon:
                 actionsQValues = agent_get_qs(current_state)
                 legalActionsIds = env_get_legal_actions(current_state)
@@ -83,6 +84,7 @@ def get_plan():
     current_state = env_reset()
 
     while not done and step < 20:
+        # Take actions greedily
         actionsQValues = agent_get_qs(current_state)
         legalActionsIds = env_get_legal_actions(current_state)
         # Make the argmax selection among the legal actions
@@ -97,14 +99,14 @@ def get_plan():
         current_state = new_state
         step += 1
 
-    return plan
+    return plan, episode_reward, done
 
 if __name__ == '__main__':
     env = Environment()
     agent = DQNAgent(env)
 
     deep_q_learning_alg()
-    solution = get_plan()
+    solution, score, finished = get_plan()
 
-    print(len(solution))
+    print(f"Length of solution: {len(solution)} | Score: {score} | Done: {finished}")
     print(solution)
