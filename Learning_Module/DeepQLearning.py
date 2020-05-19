@@ -27,14 +27,14 @@ def deep_q_learning_alg():
         done = False
         current_state = env_reset()
 
-        while not done and step < MAX_STEP_PER_EPISODE:
+        while not done:
             # TODO: ALTERNATIVE (LAST OPTION) MAKE THE MODEL LEARN ILLEGAL ACTIONS BY GIVING A LARGE NEGATIVE REWARD AND NOT CHANGING THE STATE
-            if np_random_number() > epsilon:
+            if np_random_number() > epsilon:  # Take legal action greedily
                 actionsQValues = agent_get_qs(current_state)
                 legalActionsIds = env_get_legal_actions(current_state)
                 # Make the argmax selection among the legal actions
                 action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
-            else:
+            else:  # Take random legal action
                 action = env_sample()
 
             new_state, reward, done = env_step(action)
@@ -52,19 +52,19 @@ def deep_q_learning_alg():
 
         if not episode % AGGREGATE_STATS_EVERY or episode == 1:
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:]) / len(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
+            # min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
+            # max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
 
             print(f"Episode {episode} --> Score: {episode_reward} | Average score: {average_reward} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
-            if min_reward >= MIN_REWARD:
-                agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+            # if min_reward >= MIN_REWARD:
+            #     agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
-            epsilon = max(MIN_EPSILON, epsilon)
+            # epsilon = max(MIN_EPSILON, epsilon)
 
 def get_plan():
     plan = []

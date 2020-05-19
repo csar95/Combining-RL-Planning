@@ -233,23 +233,30 @@ class Environment:
     '''
     Returns whether the current state satisfies the goal state or not
     '''
-    def is_done(self):
+    def check_proximity_to_goal(self):
+        pendingPreds = len(self.goal_state)
+
         for pred in self.goal_state:
             targetValue = 0 if pred[0] == '!' else 1
-            if self.state[ self.stateTerms[pred] ] != targetValue:
-                return False
+            if self.state[ self.stateTerms[pred] ] == targetValue:
+                pendingPreds -= 1
 
-        return True
+        return pendingPreds
 
     '''
     Takes the action string
     Returns the reward obtained after taking that action based on the increase keyword in the definition of the action
     '''
-    def get_reward(self, action):  # TODO: DEFINE A BETTER REWARD FUNCTION
-        reward = 0
-        for rwd in self.allActions[action]["reward"].values():
-            reward -= rwd
-        return -6 if reward == 0 else reward  # Default reward (penalty) for taking a step: -1
+    def get_reward(self, action, gain):  # TODO: DEFINE A BETTER REWARD FUNCTION
+        # reward = 0
+        # for rwd in self.allActions[action]["reward"].values():
+        #     reward -= rwd
+        #
+        # if reward == 0:  # Default reward (penalty) for taking a step: -3
+        #     return -3 * ( pendingPreds/len(self.goal_state) )
+        # else:
+        #     return reward * ( pendingPreds/len(self.goal_state) )
+        return -1 + (gain * 10)
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
@@ -267,7 +274,7 @@ class Environment:
             bit += ')'
             self.state[ self.stateTerms[bit] ] = 1
 
-        return self.state
+        return self.state.copy()
 
     '''
     Returns the index at self.allActionsKeys of the 'legal' action selected at random from all possible actions
@@ -282,12 +289,14 @@ class Environment:
     Returns the state array, the value of the reward and whether the state satisfies the goal state
     '''
     def step(self, action):
+        prevPendingPreds = self.check_proximity_to_goal()
         actionKey = self.allActionsKeys[action]
 
         for eff, value in self.allActions[actionKey]["effect"].items():
             self.state[ eff ] = value
 
-        if self.is_done():
-            return self.state, 350, True
+        newPendingPreds = self.check_proximity_to_goal()
+        if not newPendingPreds:
+            return self.state.copy(), 200, True
         else:
-            return self.state, self.get_reward(actionKey), False
+            return self.state.copy(), self.get_reward(actionKey, prevPendingPreds-newPendingPreds), False
