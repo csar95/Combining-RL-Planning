@@ -1,3 +1,9 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+from Learning_Module.hyperparameters_DQL import *
+
+
 RED = "\x1b[31m"
 GREEN = "\x1b[32m"
 YELLOW = "\x1b[33m"
@@ -18,3 +24,16 @@ valid = {
 
 def colorPrint(msg, color):
     print(color + msg + RESET)
+
+def plot_graph(avgScores, episodes):
+    plt.figure(figsize=(8, 6))
+    # colors = ['darkorange', 'forestgreen', 'royalblue', 'firebrick', 'gold', 'deepskyblue', 'darkviolet', 'peru', 'deeppink', 'yellowgreen']
+    plt.plot(episodes, avgScores, color='darkorange', linewidth=2)  #, label=f'Label ')
+
+    plt.xlim([0, np.max(episodes)])
+    # plt.ylim([0.0, 1.0])
+    plt.xlabel('Episode')
+    plt.ylabel('Average score')
+    plt.title('Learning curve')
+    # plt.legend(loc="lower right")
+    plt.show()

@@ -1,4 +1,6 @@
 import time
+import os
+
 from hyperparameters_DQL import *
 from Encoding_Module.environment import *
 from DQNAgent import *
@@ -50,7 +52,7 @@ def deep_q_learning_alg():
         # Append episode reward to a list and log stats (every given number of episodes)
         ep_rewards.append(episode_reward)
 
-        if not episode % AGGREGATE_STATS_EVERY or episode == 1:
+        if not episode % AGGREGATE_STATS_EVERY:
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:]) / len(ep_rewards[-AGGREGATE_STATS_EVERY:])
             # min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
             # max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
@@ -58,13 +60,20 @@ def deep_q_learning_alg():
             print(f"Episode {episode} --> Score: {episode_reward} | Average score: {average_reward} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
-            # if min_reward >= MIN_REWARD:
-            #     agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+            if average_reward >= AVG_REWARD:
+                # Create models folder
+                if not os.path.isdir('models'):
+                    os.makedirs('models')
+                agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
+                # agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+                break
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
             # epsilon = max(MIN_EPSILON, epsilon)
+
+    return np.array(ep_rewards), np.arange(AGGREGATE_STATS_EVERY, (len(ep_rewards)*AGGREGATE_STATS_EVERY)+AGGREGATE_STATS_EVERY, step=AGGREGATE_STATS_EVERY)
 
 def get_plan():
     plan = []
@@ -83,7 +92,7 @@ def get_plan():
     done = False
     current_state = env_reset()
 
-    while not done and step < 20:
+    while not done and step < 10:
         # Take actions greedily
         actionsQValues = agent_get_qs(current_state)
         legalActionsIds = env_get_legal_actions(current_state)
@@ -105,8 +114,10 @@ if __name__ == '__main__':
     env = Environment()
     agent = DQNAgent(env)
 
-    deep_q_learning_alg()
+    avgScores, episodes = deep_q_learning_alg()
     solution, score, finished = get_plan()
 
     print(f"Length of solution: {len(solution)} | Score: {score} | Done: {finished}")
     print(solution)
+
+    plot_graph(avgScores, episodes)

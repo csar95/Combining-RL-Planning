@@ -5,17 +5,11 @@ from keras.optimizers import Adam
 from collections import deque
 import time
 import random
-import os
 import sys
 import numpy as np
 
 from hyperparameters_DQL import *
 from utils import *
-
-
-# Create models folder
-# if not os.path.isdir('models'):
-#     os.makedirs('models')
 
 
 class DQNAgent:
@@ -37,11 +31,9 @@ class DQNAgent:
     def create_model(self):
         model = Sequential()
 
-        model.add(Dense(units=128,
+        model.add(Dense(units=32,
                         activation="relu",
                         input_dim=self.env.state.size)),
-        model.add(Dense(units=256,
-                        activation="relu"))
         model.add(Dense(units=self.env.allActionsKeys.size,
                         activation="softmax"))
 
