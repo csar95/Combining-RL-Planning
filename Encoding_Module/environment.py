@@ -247,16 +247,13 @@ class Environment:
     Takes the action string
     Returns the reward obtained after taking that action based on the increase keyword in the definition of the action
     '''
-    def get_reward(self, action, gain):  # TODO: DEFINE A BETTER REWARD FUNCTION
-        # reward = 0
-        # for rwd in self.allActions[action]["reward"].values():
-        #     reward -= rwd
-        #
-        # if reward == 0:  # Default reward (penalty) for taking a step: -3
-        #     return -3 * ( pendingPreds/len(self.goal_state) )
-        # else:
-        #     return reward * ( pendingPreds/len(self.goal_state) )
-        return -1 + (gain * 10)
+    def get_reward(self, action, gain):
+        reward = -1
+        for rwd in self.allActions[action]["reward"].values():
+            reward -= rwd/MAX_REWARD
+
+        return reward + (gain * 15)
+        # return -1 + (gain * 10)
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
@@ -297,6 +294,6 @@ class Environment:
 
         newPendingPreds = self.check_proximity_to_goal()
         if not newPendingPreds:
-            return self.state.copy(), 200, True
+            return self.state.copy(), GOAL_REWARD, True
         else:
             return self.state.copy(), self.get_reward(actionKey, prevPendingPreds-newPendingPreds), False

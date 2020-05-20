@@ -60,7 +60,7 @@ def deep_q_learning_alg():
             print(f"Episode {episode} --> Score: {episode_reward} | Average score: {average_reward} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
-            if average_reward >= AVG_REWARD:
+            if average_reward >= GOAL_REWARD:
                 # Create models folder
                 if not os.path.isdir('models'):
                     os.makedirs('models')
@@ -73,7 +73,7 @@ def deep_q_learning_alg():
             epsilon *= EPSILON_DECAY
             # epsilon = max(MIN_EPSILON, epsilon)
 
-    return np.array(ep_rewards), np.arange(AGGREGATE_STATS_EVERY, (len(ep_rewards)*AGGREGATE_STATS_EVERY)+AGGREGATE_STATS_EVERY, step=AGGREGATE_STATS_EVERY)
+    return np.array(ep_rewards), np.arange(1, episode+1)
 
 def get_plan():
     plan = []
