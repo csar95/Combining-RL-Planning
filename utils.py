@@ -25,23 +25,37 @@ valid = {
 def colorPrint(msg, color):
     print(color + msg + RESET)
 
-def plot_graph(avgScores, episodes):
+def generate_graphs(episodes, avgScores, epLengths, epDurations):
     plt.figure(figsize=(8, 6))
-    # colors = ['darkorange', 'forestgreen', 'royalblue', 'firebrick', 'gold', 'deepskyblue', 'darkviolet', 'peru', 'deeppink', 'yellowgreen']
 
     plt.xlim([0, np.max(episodes)])
-    # plt.ylim([0.0, 1.0])
     plt.xlabel('Episode')
-    plt.ylabel('Average score')
-    plt.title('Learning curve')
-    # plt.legend(loc="lower right")
+    plt.ylabel('Average episode score')
+    plt.title('Episode reward over time')
 
-    # plt.scatter(episodes, avgScores)
-    #
-    # z = np.polyfit(episodes, avgScores, 1)
-    # p = np.poly1d(z)
-    # plt.plot(episodes, p(episodes), color='darkorange', linewidth=2)
+    plt.plot(episodes, avgScores, color='firebrick', linewidth=1.5)
+    plt.savefig('Learning curve.png')
 
-    plt.plot(episodes, avgScores, color='darkorange', linewidth=2)  #, label=f'Label ')
+    # ------------------------------------------------------------------------------------------------ #
 
-    plt.show()
+    plt.clf()
+
+    plt.xlim([0, np.max(epDurations)])
+    plt.xlabel('Time step')
+    plt.ylabel('Episode')
+    plt.title('Episode per time step')
+
+    plt.plot(epDurations, episodes, color='firebrick', linewidth=1.5)
+    plt.savefig('Episodes duration.png')
+
+    # ------------------------------------------------------------------------------------------------ #
+
+    plt.clf()
+
+    plt.xlim([0, np.max(episodes)])
+    plt.xlabel('Episode')
+    plt.ylabel('Average episode length')
+    plt.title('Episode length over time')
+
+    plt.plot(episodes, epLengths, color='firebrick', linewidth=1.5)
+    plt.savefig('Episodes length.png')

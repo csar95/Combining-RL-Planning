@@ -25,7 +25,7 @@ class DQNAgent:
     def create_model(self):
         model = Sequential()
 
-        model.add(Dense(units=32,
+        model.add(Dense(units=64,
                         activation="relu",
                         input_dim=self.env.state.size)),
         model.add(Dense(units=self.env.allActionsKeys.size,

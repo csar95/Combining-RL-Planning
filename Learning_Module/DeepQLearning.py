@@ -9,6 +9,7 @@ from DQNAgent import *
 def deep_q_learning_alg():
 
     np_argmax = np.argmax
+    np_append = np.append
     np_random_number = np.random.random
 
     agent_get_qs = agent.get_qs
@@ -22,17 +23,21 @@ def deep_q_learning_alg():
 
     epsilon = 1  # Going to be decayed
     ep_rewards = []
-
-    start_time = time.time()
+    ep_lengths = []
+    ep_durations = []
+    avgScores = np.array([])
+    avgLengths = np.array([])
+    avgDurations = np.array([])
 
     for episode in range(1, EPISODES+1):
         episode_reward = 0
-        step = 1
+        step = 0
         done = False
         current_state = env_reset()
 
+        start_time = time.time()
+
         while not done:
-            # TODO: ALTERNATIVE (LAST OPTION) MAKE THE MODEL LEARN ILLEGAL ACTIONS BY GIVING A LARGE NEGATIVE REWARD AND NOT CHANGING THE STATE
             if np_random_number() > epsilon:  # Take legal action greedily
                 actionsQValues = agent_get_qs(current_state)
                 legalActionsIds = env_get_legal_actions(current_state)
@@ -53,16 +58,22 @@ def deep_q_learning_alg():
 
         # Append episode reward to a list and log stats (every given number of episodes)
         ep_rewards.append(episode_reward)
+        ep_lengths.append(step)
+        ep_durations.append(time.time() - start_time)
 
         if not episode % AGGREGATE_STATS_EVERY:
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:]) / len(ep_rewards[-AGGREGATE_STATS_EVERY:])
             # min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
             # max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
 
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Epsilon: {epsilon}")
+            average_length = sum(ep_lengths[-AGGREGATE_STATS_EVERY:]) / len(ep_lengths[-AGGREGATE_STATS_EVERY:])
+            average_duration = sum(ep_durations[-AGGREGATE_STATS_EVERY:]) / len(ep_durations[-AGGREGATE_STATS_EVERY:])
 
-            colorPrint(str(time.time() - start_time), YELLOW)
-            start_time = time.time()
+            avgScores = np_append(avgScores, average_reward)
+            avgLengths = np_append(avgLengths, average_length)
+            avgDurations = np_append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
+
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
             if average_reward >= GOAL_REWARD:
@@ -70,20 +81,18 @@ def deep_q_learning_alg():
                 if not os.path.isdir('models'):
                     os.makedirs('models')
                 agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-                # agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
                 break
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
-            # epsilon = max(MIN_EPSILON, epsilon)
 
     # Create models folder
     if not os.path.isdir('models'):
         os.makedirs('models')
         agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
 
-    return np.array(ep_rewards), np.arange(1, episode+1)
+    return avgScores, np.arange(AGGREGATE_STATS_EVERY, avgScores.size * AGGREGATE_STATS_EVERY + AGGREGATE_STATS_EVERY, step=AGGREGATE_STATS_EVERY), avgLengths, avgDurations
 
 def get_plan():
     plan = []
@@ -98,7 +107,7 @@ def get_plan():
     env_get_legal_actions = env.get_legal_actions
 
     episode_reward = 0
-    step = 1
+    step = 0
     done = False
     current_state = env_reset()
 
@@ -124,10 +133,10 @@ if __name__ == '__main__':
     env = Environment()
     agent = DQNAgent(env)
 
-    avgScores, episodes = deep_q_learning_alg()
+    avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg()
     solution, score, finished = get_plan()
 
     print(f"Length of solution: {len(solution)} | Score: {score} | Done: {finished}")
     print(solution)
 
-    plot_graph(avgScores, episodes)
+    generate_graphs(episodes, avg_scores, avg_lengths, avg_durations)
