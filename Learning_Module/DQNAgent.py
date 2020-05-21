@@ -5,7 +5,6 @@ from keras.optimizers import Adam
 from collections import deque
 import time
 import random
-import sys
 import numpy as np
 
 from hyperparameters_DQL import *
@@ -20,13 +19,8 @@ class DQNAgent:
         # Main model. The one that gets trained every step
         self.model = self.create_model()
 
-        # Target model. The one we .predict against every step
-        # self.target_model = self.create_model()
-        # self.target_model.set_weights(self.model.get_weights())
-        # self.target_update_counter = 0
-
         self.replay_memory = deque(maxlen=REPLAY_MEMORY_SIZE)
-        self.tensorboard = TensorBoard(log_dir=f"log/{MODEL_NAME}-{int(time.time())}")
+        # self.tensorboard = TensorBoard(log_dir=f"log/{MODEL_NAME}-{int(time.time())}")
 
     def create_model(self):
         model = Sequential()
@@ -61,12 +55,9 @@ class DQNAgent:
 
         next_states = np.array([transition[3] for transition in minibatch])
         next_qs_minibatch = self.model.predict(next_states, batch_size=MINIBATCH_SIZE, use_multiprocessing=True)
-        # next_qs_minibatch = self.target_model.predict(next_states, batch_size=MINIBATCH_SIZE, use_multiprocessing=True)
 
         env_get_legal_actions = self.env.get_legal_actions
         np_max = np.max
-        # np_min = np.min
-        # np_arange = np.arange
 
         X = []
         y = []
@@ -75,9 +66,6 @@ class DQNAgent:
             if not done:
                 legalActionsIds = env_get_legal_actions(next_state)
                 max_next_q = np_max(next_qs_minibatch[index][legalActionsIds])
-
-                # ilegalActionsIds = list(set(np_arange(current_qs_list[index].size)) - set(env_get_legal_actions(current_state)))
-                # current_qs_list[index][ilegalActionsIds] = -sys.maxsize
 
                 new_q = reward + DISCOUNT * max_next_q
             else:
@@ -90,11 +78,3 @@ class DQNAgent:
             y.append(current_qs)
 
         self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False)  #, callbacks=[self.tensorboard] if terminal_state else None)
-
-        # Updating to determine if we want to update target_model yet
-        # if terminal_state:
-        #     self.target_update_counter += 1
-        #
-        # if self.target_update_counter > UPDATE_TARGET_EVERY:
-        #     self.target_model.set_weights(self.model.get_weights())
-        #     self.target_update_counter = 0

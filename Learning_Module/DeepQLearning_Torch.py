@@ -1,14 +1,15 @@
 import time
 import os
+import torch as T
 
 from hyperparameters_DQL import *
 from Encoding_Module.environment import *
-from DQNAgent import *
+from DQNAgent_Torch import *
 
 
 def deep_q_learning_alg():
 
-    np_argmax = np.argmax
+    t_max = T.max
     np_random_number = np.random.random
 
     agent_get_qs = agent.get_qs
@@ -23,8 +24,6 @@ def deep_q_learning_alg():
     epsilon = 1  # Going to be decayed
     ep_rewards = []
 
-    start_time = time.time()
-
     for episode in range(1, EPISODES+1):
         episode_reward = 0
         step = 1
@@ -37,7 +36,7 @@ def deep_q_learning_alg():
                 actionsQValues = agent_get_qs(current_state)
                 legalActionsIds = env_get_legal_actions(current_state)
                 # Make the argmax selection among the legal actions
-                action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
+                action = legalActionsIds[t_max(actionsQValues[legalActionsIds], dim=0)[1]]
             else:  # Take random legal action
                 action = env_sample()
 
@@ -46,7 +45,7 @@ def deep_q_learning_alg():
             episode_reward += reward
 
             agent_update_replay_memory((current_state, action, reward, new_state, done))
-            agent_train(done)
+            agent_train()
 
             current_state = new_state
             step += 1
@@ -59,10 +58,7 @@ def deep_q_learning_alg():
             # min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
             # max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
 
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Epsilon: {epsilon}")
-
-            colorPrint(str(time.time() - start_time), YELLOW)
-            start_time = time.time()
+            print(f"Episode {episode} --> Score: {episode_reward} | Average score: {average_reward} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
             if average_reward >= GOAL_REWARD:
@@ -78,18 +74,13 @@ def deep_q_learning_alg():
             epsilon *= EPSILON_DECAY
             # epsilon = max(MIN_EPSILON, epsilon)
 
-    # Create models folder
-    if not os.path.isdir('models'):
-        os.makedirs('models')
-        agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-
     return np.array(ep_rewards), np.arange(1, episode+1)
 
 def get_plan():
     plan = []
 
     append = plan.append
-    np_argmax = np.argmax
+    t_max = T.max
 
     agent_get_qs = agent.get_qs
 
@@ -107,7 +98,9 @@ def get_plan():
         actionsQValues = agent_get_qs(current_state)
         legalActionsIds = env_get_legal_actions(current_state)
         # Make the argmax selection among the legal actions
-        action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
+
+        _, idx = t_max(actionsQValues[legalActionsIds], dim=0)
+        action = legalActionsIds[idx]
 
         append(env.allActionsKeys[action])
 
@@ -122,7 +115,8 @@ def get_plan():
 
 if __name__ == '__main__':
     env = Environment()
-    agent = DQNAgent(env)
+
+    agent = DQL_Agent(env)
 
     avgScores, episodes = deep_q_learning_alg()
     solution, score, finished = get_plan()
