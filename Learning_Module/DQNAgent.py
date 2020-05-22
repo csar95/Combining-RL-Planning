@@ -25,7 +25,13 @@ class DQNAgent:
     def create_model(self):
         model = Sequential()
 
-        model.add(Dense(units=64,
+        hiddenLayerSize = 0
+        for i in range(20):
+            if 2**i > self.env.allActionsKeys.size:
+                hiddenLayerSize = 2**i
+                break
+
+        model.add(Dense(units=hiddenLayerSize,
                         activation="relu",
                         input_dim=self.env.state.size)),
         model.add(Dense(units=self.env.allActionsKeys.size,

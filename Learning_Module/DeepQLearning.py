@@ -73,15 +73,16 @@ def deep_q_learning_alg():
             avgLengths = np_append(avgLengths, average_length)
             avgDurations = np_append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
 
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Epsilon: {epsilon}")
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Epsilon: {epsilon} | Steps: {step}")
+            colorPrint(str(average_duration), YELLOW)
 
             # Save model, but only when min reward is greater or equal a set value
-            if average_reward >= GOAL_REWARD:
-                # Create models folder
-                if not os.path.isdir('models'):
-                    os.makedirs('models')
-                agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-                break
+            # if average_reward >= GOAL_REWARD:
+            #     # Create models folder
+            #     if not os.path.isdir('models'):
+            #         os.makedirs('models')
+            #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
+            #     break
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:

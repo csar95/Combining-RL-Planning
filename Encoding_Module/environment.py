@@ -10,7 +10,7 @@ from fileIO import *
 class Environment:
 
     domainPath = RESOURCES_FOLDER + "domain.pddl"
-    problemPath = RESOURCES_FOLDER + "problem.pddl"
+    problemPath = RESOURCES_FOLDER + "problem1.pddl"
 
     def __init__(self):
         self.objIndependentPreds = set([])
@@ -223,18 +223,6 @@ class Environment:
         except KeyError:
             self.legalActionsPerState[tuple(state)] = np.array(fast.get_legal_actions(state, self.allActions, self.allActionsKeys))
             return self.legalActionsPerState[tuple(state)]
-
-    '''
-    Returns whether the action preconditions are satisfied in the current state or not
-    '''
-    def is_legal(self, action):
-        state = self.state
-
-        for pre, targetValue in self.allActions[action]["precondition"].items():
-            if state[pre] != targetValue:
-                return False
-
-        return True
 
     '''
     Returns whether the current state satisfies the goal state or not
