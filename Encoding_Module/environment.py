@@ -52,6 +52,8 @@ class Environment:
 
         self.allActionsKeys = np.array(list(self.allActions.keys()))
 
+        self.legalActionsPerState = {}
+
         # Initialize the state encoding as per the init block in the problem file
         self.reset()
 
@@ -216,7 +218,11 @@ class Environment:
     Returns an array of all legal actions from the current state
     '''
     def get_legal_actions(self, state):
-        return np.array(fast.get_legal_actions(state, self.allActions, self.allActionsKeys))
+        try:
+            return self.legalActionsPerState[tuple(state)]
+        except KeyError:
+            self.legalActionsPerState[tuple(state)] = np.array(fast.get_legal_actions(state, self.allActions, self.allActionsKeys))
+            return self.legalActionsPerState[tuple(state)]
 
     '''
     Returns whether the action preconditions are satisfied in the current state or not
@@ -277,9 +283,12 @@ class Environment:
     Returns the index at self.allActionsKeys of the 'legal' action selected at random from all possible actions
     '''
     def sample(self):
-        allActionsKeys = deepcopy(self.allActionsKeys)
-        np.random.shuffle(allActionsKeys)
-        return np.where(self.allActionsKeys == fast.get_random_legal_action(self.state, self.allActions, allActionsKeys))[0][0]
+        try:
+            return np.random.choice(self.legalActionsPerState[tuple(self.state)], 1)[0]
+        except KeyError:
+            allActionsKeys = deepcopy(self.allActionsKeys)
+            np.random.shuffle(allActionsKeys)
+            return np.where(self.allActionsKeys == fast.get_random_legal_action(self.state, self.allActions, allActionsKeys))[0][0]
 
     '''
     Takes the index of a legal action from self.allActionsKeys and applies the effect to the state array

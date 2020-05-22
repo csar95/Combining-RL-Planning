@@ -34,7 +34,7 @@ def generate_graphs(episodes, avgScores, epLengths, epDurations):
     plt.title('Episode reward over time')
 
     plt.plot(episodes, avgScores, color='firebrick', linewidth=1.5)
-    plt.savefig('Learning curve.png')
+    plt.savefig('/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/Learning curve.png')
 
     # ------------------------------------------------------------------------------------------------ #
 
@@ -46,7 +46,7 @@ def generate_graphs(episodes, avgScores, epLengths, epDurations):
     plt.title('Episode per time step')
 
     plt.plot(epDurations, episodes, color='firebrick', linewidth=1.5)
-    plt.savefig('Episodes duration.png')
+    plt.savefig('/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/Episodes duration.png')
 
     # ------------------------------------------------------------------------------------------------ #
 
@@ -58,4 +58,11 @@ def generate_graphs(episodes, avgScores, epLengths, epDurations):
     plt.title('Episode length over time')
 
     plt.plot(episodes, epLengths, color='firebrick', linewidth=1.5)
-    plt.savefig('Episodes length.png')
+    plt.savefig('/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/Episodes length.png')
+
+    # from scipy import interpolate
+    #
+    # f = interpolate.make_interp_spline(episodes, avgScores)
+    # episodes_smooth = np.linspace(episodes.min(), episodes.max(), episodes.size * 2)
+    #
+    # plt.plot(episodes_smooth, f(episodes_smooth), color='firebrick', linewidth=1.5)
