@@ -1,11 +1,11 @@
 import time
 import numpy as np
 import subprocess
-from environment import *
+from environment_1 import *
 
 
 def run_test():
-    colorPrint("\n------- TYPES -------", CYAN)
+    colorPrint("\n------- OBJECTS & TYPES -------", CYAN)
     print(env.types)
 
     colorPrint("\n------- ACTIONS -------", CYAN)
@@ -32,8 +32,8 @@ def run_test():
     colorPrint("\n------- IMMUTABLE PROPERTIES -------", CYAN)
     print(env.immutableProps)
 
-    colorPrint("\n------- OBJECTS & TYPES -------", CYAN)
-    print(env.types)
+    colorPrint("\n------- INIT STATE -------", CYAN)
+    print(env.init_state)
 
     colorPrint("\n------- GOAL STATE -------", CYAN)
     print(env.goal_state)
@@ -45,6 +45,7 @@ def run_test():
 
     colorPrint("\n------- STATE ENCODING -------", CYAN)
     print(env.stateTerms)
+    print(env.normalize(env.state))
     print(env.state)
     print(len(env.state))
 

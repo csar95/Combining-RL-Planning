@@ -4,13 +4,13 @@ import itertools
 import fast
 from copy import deepcopy
 
-from fileIO import *
+from fileIO_1 import *
 
 
 class Environment:
 
-    domainPath = RESOURCES_FOLDER + "elevators.pddl"
-    problemPath = RESOURCES_FOLDER + "elevators_p1.pddl"
+    domainPath = RESOURCES_FOLDER + "transport.pddl"
+    problemPath = RESOURCES_FOLDER + "transport_p1.pddl"
 
     def __init__(self):
         self.objIndependentPreds = set([])
@@ -42,7 +42,7 @@ class Environment:
 
         # Add the independent predicates to the state
         for pred in self.objIndependentPreds:
-            self.stateTerms[f"({pred})"] = len(self.stateTerms)
+            self.stateTerms[pred] = (len(self.stateTerms), [0,1])
 
         self.state = np.zeros(len(self.stateTerms), dtype=np.int64)
 
@@ -63,7 +63,9 @@ class Environment:
     Adds all forms of the current predicate to the environment state
     '''
     def form_state_elements(self, predicate):
-        predicate = list(filter(lambda elm: elm != '', predicate.split(" ")))
+        stateTermsTemp = []
+
+        predicate = predicate.split()
         name = predicate[0]
 
         # Create list with the type of each object in the predicate
@@ -76,14 +78,66 @@ class Environment:
                         objectTypes.append(predicate[idx + 1 + (i + 1)])
                         break
 
+        variableObjType = objectTypes.pop(-1)
+        variableObjects = []  # List containing all objects of the type variableObjType
+        for key, value in self.types.items():
+
+            if not value:
+                continue
+
+            # Type doesn't have subtypes
+            elif key == variableObjType and isinstance(value, list):
+                variableObjects = value
+                break
+
+            # Add all objects of all subtypes of the matching type
+            elif key == variableObjType:
+                for k, v in value.items():
+                    variableObjects += v
+                break
+
+            # Search typ within the nested dictionary
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    if not v:
+                        continue
+                    elif variableObjType == k:
+                        variableObjects = v
+                        break
+
         # Get all objects of each type of object in the predicate parameters
         poolOfObjects = self.get_pool_of_objects(objectTypes)
 
-        # Add all combinations of the objects that a predicate can have to the state dictionary (state encoding)
-        for tup in list(itertools.product(*poolOfObjects)):
-            objs = ""
-            for elem in tup: objs += (" " + elem)
-            self.stateTerms[f"({name}{objs})"] = len(self.stateTerms)  # Add each term to the dictionary with its position in the array
+        if len(poolOfObjects) > 1:
+            for comb in list(itertools.product(*poolOfObjects)):
+                tup = [name]
+                for obj in comb:
+                    tup.append(obj)
+                stateTermsTemp.append(tuple(tup))
+        else:
+            for comb in poolOfObjects[0]:
+                stateTermsTemp.append((name, comb))
+
+        for stateTerm in stateTermsTemp:
+            answered = False
+            while not answered:
+                # THIS INFO COULD BE OBTAINED IF THE PREDICATE DOESN'T APPEAR IN ANY ACTION EFFECT
+                answer = input(f'Does "{stateTerm}" always have a value? [y/N]\n').lower()
+
+                if answer == "":
+                    answer = "n"
+
+                elif answer not in valid:
+                    sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
+                    continue
+
+                answered = True
+
+                if not valid[answer]:  # Add -1
+                    self.stateTerms[stateTerm] = (len(self.stateTerms), [-1] + variableObjects)
+
+                else:
+                    self.stateTerms[stateTerm] = (len(self.stateTerms), variableObjects)
 
     '''
     Finds a set of all the possible actions that exist in this environment
@@ -101,7 +155,7 @@ class Environment:
 
                 if len(tup) != len(definition["parameters"]): continue
 
-                # Match parameters in tup with the param. names in the current action
+                #  Match parameters in tup with the param. names in the current action
                 translation = {}
                 for idx, param in enumerate(definition["parameters"]):
                     translation[re.escape(param[0])] = tup[idx]
@@ -137,18 +191,43 @@ class Environment:
                     targetValue = 0 if pred[0] == '!' else 1
 
                     precondition = pattern.sub(lambda m: translation[re.escape(m.group(0))], pred.lstrip('!'))
-                    if precondition not in self.stateTerms.keys() and\
-                            ((targetValue == 1 and precondition not in self.immutableProps) or\
-                            (targetValue == 0 and precondition in self.immutableProps)):
-                        # The precondition predicate of the current action is:
-                        # - Not present in the state keys AND
-                        # - It is supposed to be True but is not in the immutableProps set OR It is supposed to be False but is in the immutableProps set
-                        newActionIsValid = False
-                        break
+                    preconditionAux = re.sub('[()]', '', precondition).split()
 
-                    # I don't need to include the immutable predicates to check if an action is legal. I'm already checking those thing here
-                    if precondition in self.stateTerms.keys():
-                        preconditions[ self.stateTerms[precondition] ] = targetValue  # Save the position of the predicate
+                    if len(preconditionAux) > 1:
+                        variableObj = preconditionAux.pop(-1)
+
+                        if tuple(preconditionAux) not in self.stateTerms.keys() and \
+                                ((targetValue == 1 and precondition not in self.immutableProps) or
+                                 (targetValue == 0 and precondition in self.immutableProps)):
+                            # The precondition predicate of the current action is:
+                            # - Not present in the state keys AND
+                            # - It is supposed to be True but is not in the immutableProps set OR It is supposed to be False but is in the immutableProps set
+                            newActionIsValid = False
+                            break
+
+                        # Save the position of the predicate
+                        if tuple(preconditionAux) in self.stateTerms.keys():
+                            (idx, objects) = self.stateTerms[tuple(preconditionAux)]
+
+                            if targetValue == 0 and idx not in preconditions:
+                                preconditions[idx] = 0  # -1 is always going to be at the 1st position
+
+                            if targetValue == 1:
+                                preconditions[idx] = objects.index(variableObj)
+
+                    else:
+                        if preconditionAux[0] not in self.stateTerms.keys() and \
+                                ((targetValue == 1 and precondition not in self.immutableProps) or
+                                 (targetValue == 0 and precondition in self.immutableProps)):
+                            # The precondition predicate of the current action is:
+                            # - Not present in the state keys AND
+                            # - It is supposed to be True but is not in the immutableProps set OR It is supposed to be False but is in the immutableProps set
+                            newActionIsValid = False
+                            break
+
+                        # Save the position of the predicate
+                        if preconditionAux[0] in self.stateTerms.keys():
+                            preconditions[ self.stateTerms[preconditionAux[0]][0] ] = targetValue
 
                 if not newActionIsValid:
                     continue
@@ -161,13 +240,33 @@ class Environment:
                     targetValue = 0 if eff[0] == '!' else 1
 
                     effect = pattern.sub(lambda m: translation[re.escape(m.group(0))], eff.lstrip('!'))
-                    if effect not in self.stateTerms.keys():
-                        # The effect predicate of the current action is not present in the state keys
-                        # The immutableProps are not taken into account here because they cannot appear in any action effects
-                        newActionIsValid = False
-                        break
+                    effectAux = re.sub('[()]', '', effect).split()
 
-                    effects[ self.stateTerms[effect] ] = targetValue
+                    if len(effectAux) > 1:
+                        variableObj = effectAux.pop(-1)
+
+                        if tuple(effectAux) not in self.stateTerms.keys():
+                            # The effect predicate of the current action is not present in the state keys
+                            # The immutableProps are not taken into account here because they cannot appear in any action effects
+                            newActionIsValid = False
+                            break
+
+                        (idx, objects) = self.stateTerms[tuple(effectAux)]
+
+                        if targetValue == 0 and idx not in effects:
+                            effects[idx] = 0  # -1 is always going to be at the 1st position
+
+                        elif targetValue == 1:
+                            effects[idx] = objects.index(variableObj)
+
+                    else:
+                        if effectAux[0] not in self.stateTerms.keys():
+                            # The effect predicate of the current action is not present in the state keys
+                            # The immutableProps are not taken into account here because they cannot appear in any action effects
+                            newActionIsValid = False
+                            break
+
+                        effects[self.stateTerms[effectAux[0]][0]] = targetValue
 
                 if not newActionIsValid:
                     continue
@@ -189,7 +288,8 @@ class Environment:
         for typ in listOfObjectTypes:
             for key, value in self.types.items():
 
-                if not value: continue
+                if not value:
+                    continue
 
                 # Type doesn't have subtypes
                 elif key == typ and isinstance(value, list):
@@ -207,7 +307,8 @@ class Environment:
                 # Search typ within the nested dictionary
                 if isinstance(value, dict):
                     for k, v in value.items():
-                        if not v: continue
+                        if not v:
+                            continue
                         elif typ == k:
                             poolOfObjects.append(v)
                             break
@@ -217,6 +318,7 @@ class Environment:
     '''
     Returns an array of all legal actions from the current state
     '''
+
     def get_legal_actions(self, state):
         try:
             return self.legalActionsPerState[tuple(state)]
@@ -232,7 +334,17 @@ class Environment:
 
         for pred in self.goal_state:
             targetValue = 0 if pred[0] == '!' else 1
-            if self.state[ self.stateTerms[pred] ] == targetValue:
+
+            pred = re.sub('[()]', '', pred.lstrip('!')).split()
+            if len(pred) > 1:
+                variableObj = pred.pop(-1)
+                (idx, objects) = self.stateTerms[tuple(pred)]
+
+                if (targetValue == 1 and self.state[idx] == objects.index(variableObj)) or \
+                        (targetValue == 0 and self.state[idx] == objects.index(-1)):
+                    pendingPreds -= 1
+
+            elif self.state[ self.stateTerms[pred[0]][0] ] == targetValue:
                 pendingPreds -= 1
 
         return pendingPreds
@@ -244,10 +356,16 @@ class Environment:
     def get_reward(self, action, gain):
         reward = -1
         for rwd in self.allActions[action]["reward"].values():
-            reward -= rwd/MAX_REWARD
+            reward -= rwd / MAX_REWARD
 
         return reward + (gain * 15)
         # return -1 + (gain * 10)
+
+    def normalize(self, state):
+        normalizedState = np.zeros(state.size, dtype=np.float64)
+        for (idx, objects) in self.stateTerms.values():
+            normalizedState[idx] = state[idx]/float(len(objects)-1)
+        return normalizedState
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
@@ -259,11 +377,13 @@ class Environment:
         self.state = np.zeros(len(self.stateTerms), dtype=np.int64)
 
         for prop in self.init_state:
-            bit = '('
-            for idx, x in enumerate(list(filter(lambda elem: elem != '', prop.strip().split(" ")))):
-                bit += x if idx == 0 else ' ' + x
-            bit += ')'
-            self.state[ self.stateTerms[bit] ] = 1
+            propTemp = prop.strip().split()
+            if len(propTemp) > 1:
+                variableObj = propTemp.pop(-1)
+                (idx, objects) = self.stateTerms[ tuple(propTemp) ]
+                self.state[idx] = objects.index(variableObj)
+            else:
+                self.state[ self.stateTerms[propTemp[0]][0] ] = 1
 
         return self.state.copy()
 

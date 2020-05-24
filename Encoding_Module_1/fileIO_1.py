@@ -219,7 +219,7 @@ def read_problem_file(filePath, env):
                 else:
                     # For each property in current line search for the ones immutable and add them to the environment
                     for prop in list(filter(lambda elm: '=' not in elm, re.findall(r"\((.*?)\)", line.strip()))):  # Omit properties with '='
-                        if property_in_predicates(list(prop.strip().split())[0], env.immutablePreds):
+                        if property_in_predicates(list(filter(lambda elem: elem != '', prop.strip().split(" ")))[0], env.immutablePreds):
                             immutableProps.add(f"({prop.strip()})")
                         else:
                             init_state.append(prop.strip())
