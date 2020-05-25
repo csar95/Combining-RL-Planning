@@ -3,14 +3,15 @@ import numpy as np
 import itertools
 import fast
 from copy import deepcopy
+from statistics import mean, stdev
 
 from fileIO_1 import *
 
 
 class Environment:
 
-    domainPath = RESOURCES_FOLDER + "transport.pddl"
-    problemPath = RESOURCES_FOLDER + "transport_p1.pddl"
+    domainPath = RESOURCES_FOLDER + "elevators.pddl"
+    problemPath = RESOURCES_FOLDER + "elevators_p1.pddl"
 
     def __init__(self):
         self.objIndependentPreds = set([])
@@ -45,6 +46,11 @@ class Environment:
             self.stateTerms[pred] = (len(self.stateTerms), [0,1])
 
         self.state = np.zeros(len(self.stateTerms), dtype=np.int64)
+
+        self.statsPerTerm = {}
+        for (idx, objects) in self.stateTerms.values():
+            lAux = list(range( len(objects) ))
+            self.statsPerTerm[idx] = (mean(lAux), stdev(lAux))
 
         # This will be useful to form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
@@ -361,10 +367,13 @@ class Environment:
         return reward + (gain * 15)
         # return -1 + (gain * 10)
 
+    '''
+    Returns the z-score normalized vector of the state
+    '''
     def normalize(self, state):
         normalizedState = np.zeros(state.size, dtype=np.float64)
         for (idx, objects) in self.stateTerms.values():
-            normalizedState[idx] = state[idx]/float(len(objects)-1)
+            normalizedState[idx] = (state[idx] - self.statsPerTerm[idx][0]) / float(self.statsPerTerm[idx][1])
         return normalizedState
 
 # -------------------------------------------------------------------------------------------------------------------- #
