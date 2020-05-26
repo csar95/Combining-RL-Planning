@@ -219,7 +219,7 @@ def read_problem_file(filePath, env):
                 else:
                     # For each property in current line search for the ones immutable and add them to the environment
                     for prop in list(filter(lambda elm: '=' not in elm, re.findall(r"\((.*?)\)", line.strip()))):  # Omit properties with '='
-                        if property_in_predicates(list(prop.strip().split())[0], env.immutablePreds):
+                        if property_in_predicates(prop.strip().split()[0], env.immutablePreds):
                             immutableProps.add(f"({prop.strip()})")
                         else:
                             init_state.append(prop.strip())
@@ -248,7 +248,7 @@ Checks whether the prop_name exists in any of the predicates in the 2nd paramete
 '''
 def property_in_predicates(prop_name, predicates):
     for pred in predicates:
-        if re.search(r"\b" + re.escape(prop_name) + r"\b", pred):
+        if prop_name == re.sub('[()]', '', pred).split()[0]:
             return True
     return False
 
