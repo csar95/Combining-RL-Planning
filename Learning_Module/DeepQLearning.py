@@ -77,12 +77,12 @@ def deep_q_learning_alg():
             colorPrint(str(average_duration), YELLOW)
 
             # Save model, but only when min reward is greater or equal a set value
-            # if average_reward >= GOAL_REWARD:
-            #     # Create models folder
-            #     if not os.path.isdir('models'):
-            #         os.makedirs('models')
-            #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-            #     break
+            if average_reward > GOAL_REWARD:
+                # Create models folder
+                if not os.path.isdir('models'):
+                    os.makedirs('models')
+                agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
+                break
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:

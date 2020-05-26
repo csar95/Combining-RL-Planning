@@ -35,11 +35,17 @@ def run_test():
     colorPrint("\n------- OBJECTS & TYPES -------", CYAN)
     print(env.types)
 
+    colorPrint("\n------- INIT STATE -------", CYAN)
+    print(env.init_state)
+
     colorPrint("\n------- GOAL STATE -------", CYAN)
     print(env.goal_state)
 
     colorPrint("\n------- FUNCTIONS VALUES -------", CYAN)
     print(env.allFunctions)
+
+    colorPrint("\n------- REWARDS VALUES -------", CYAN)
+    print(env.allRewards)
 
     # ------------------------------------------------------------------------ #
 

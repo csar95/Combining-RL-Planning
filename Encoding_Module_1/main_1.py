@@ -41,6 +41,9 @@ def run_test():
     colorPrint("\n------- FUNCTIONS VALUES -------", CYAN)
     print(env.allFunctions)
 
+    colorPrint("\n------- REWARDS VALUES -------", CYAN)
+    print(env.allRewards)
+
     # ------------------------------------------------------------------------ #
 
     colorPrint("\n------- STATE ENCODING -------", CYAN)

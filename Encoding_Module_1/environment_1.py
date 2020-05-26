@@ -60,6 +60,8 @@ class Environment:
 
         self.legalActionsPerState = {}
 
+        self.allRewards = np.sort( self.get_all_rewards() )
+
         # Initialize the state encoding as per the init block in the problem file
         self.reset()
 
@@ -286,6 +288,18 @@ class Environment:
                 self.allActions[f"({action}{params})"] = newAction
 
     '''
+    Saves in an array all the possible rewards that the agent can get in this domain 
+    '''
+    def get_all_rewards(self):
+        allRewards = np.array([])
+        for action in self.allActions.values():
+            for rwd in action['reward'].values():
+                if rwd not in allRewards:
+                    allRewards = np.append(allRewards, rwd)
+
+        return allRewards
+
+    '''
     Returns a list of lists where each list contains all the objects of each type in listOfObjectTypes
     '''
     def get_pool_of_objects(self, listOfObjectTypes):
@@ -362,7 +376,8 @@ class Environment:
     def get_reward(self, action, gain):
         reward = -1
         for rwd in self.allActions[action]["reward"].values():
-            reward -= rwd / MAX_REWARD
+            reward -= (np.where(self.allRewards == rwd)[0][0] + 1) / self.allRewards.size
+            # reward -= rwd/MAX_REWARD
 
         return reward + (gain * 15)
         # return -1 + (gain * 10)
