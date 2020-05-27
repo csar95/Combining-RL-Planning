@@ -3,7 +3,8 @@ import os
 
 from hyperparameters_DQL import *
 from Encoding_Module.environment import *
-from DQNAgent import *
+# from DQNAgent import *
+from DDQNAgent import *
 
 
 def deep_q_learning_alg():
@@ -132,7 +133,8 @@ def get_plan():
 
 if __name__ == '__main__':
     env = Environment()
-    agent = DQNAgent(env)
+    # agent = DQNAgent(env)
+    agent = DDQNAgent(env)
 
     avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg()
     solution, score, finished = get_plan()
