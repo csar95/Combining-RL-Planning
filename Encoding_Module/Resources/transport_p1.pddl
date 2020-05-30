@@ -30,8 +30,8 @@
 
         (road city-loc-1 city-loc-2)
         (road city-loc-2 city-loc-1)
-        (= (road-length city-loc-1 city-loc-2) 13)
-        (= (road-length city-loc-2 city-loc-1) 13)
+        (= (road-length city-loc-1 city-loc-2) 17)
+        (= (road-length city-loc-2 city-loc-1) 17)
 
         (at package-1 city-loc-2)
         (at package-2 city-loc-3)
