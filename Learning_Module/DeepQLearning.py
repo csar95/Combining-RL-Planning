@@ -38,7 +38,7 @@ def deep_q_learning_alg():
 
         start_time = time.time()
 
-        while not done:
+        while not done and step < MAX_STEP_PER_EPISODE:
             if np_random_number() > epsilon:  # Take legal action greedily
                 actionsQValues = agent_get_qs(current_state)
                 legalActionsIds = env_get_legal_actions(current_state)
@@ -78,12 +78,12 @@ def deep_q_learning_alg():
             colorPrint(str(average_duration), YELLOW)
 
             # Save model, but only when min reward is greater or equal a set value
-            if average_reward > GOAL_REWARD:
-                # Create models folder
-                if not os.path.isdir('models'):
-                    os.makedirs('models')
-                agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-                break
+            # if average_reward > GOAL_REWARD + GOAL_REWARD * ((len(env.goal_state) - 1) / len(env.goal_state)):
+            #     # Create models folder
+            #     if not os.path.isdir('models'):
+            #         os.makedirs('models')
+            #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
+            #     break
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:

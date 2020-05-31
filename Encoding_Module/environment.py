@@ -258,10 +258,11 @@ class Environment:
     def get_reward(self, action, gain):
         reward = -1
         for rwd in self.allActions[action]["reward"].values():
-            reward -= (np.where(self.allRewards == rwd)[0][0] + 1) / self.allRewards.size
             # reward -= rwd/MAX_REWARD
+            reward -= rwd
 
-        return reward + (gain * 15)
+        return reward + (gain * (GOAL_REWARD / len(self.goal_state)))
+        # return reward + (gain * 15)
         # return -1 + (gain * 10)
 
 # -------------------------------------------------------------------------------------------------------------------- #

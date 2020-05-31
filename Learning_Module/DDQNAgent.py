@@ -38,7 +38,7 @@ class DDQNAgent:
                         activation="relu",
                         input_dim=self.env.state.size)),
         model.add(Dense(units=self.env.allActionsKeys.size,
-                        activation="softmax"))
+                        activation="linear"))
 
         model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=['accuracy'])
 
