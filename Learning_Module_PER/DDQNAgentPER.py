@@ -1,19 +1,16 @@
-from keras.models import Sequential, Model
-from keras.layers import Input, Dense, Dropout, Activation
-from keras.callbacks import TensorBoard
+from keras.models import Model
+from keras.layers import Input, Dense
 from keras.optimizers import Adam
 import keras.backend as K
 from collections import deque
-import time
 import random
-import numpy as np
 
-from hyperparameters_DQL import *
 from utils import *
+from hyperparameters_DQL import *
 
 
 def custom_MSE(qValues_target, qValues_pred, importance):
-        return K.mean(K.square(qValues_pred - qValues_target) * importance, axis=-1)
+    return K.mean(K.square(qValues_pred - qValues_target) * importance, axis=-1)
 
 
 class PrioritizedReplayBuffer:
@@ -74,7 +71,7 @@ class DDQNAgentPER:
         qValues_target = Input(shape=(self.env.allActionsKeys.size,), name='y_true')
         importance_in = Input(shape=(1,), name='importance_in')
         hiddenLayer = Dense(units=hiddenLayerSize, activation="relu")(state_in)
-        qValues_pred = Dense(self.env.allActionsKeys.size, activation='softmax', name='y_pred')(hiddenLayer)
+        qValues_pred = Dense(self.env.allActionsKeys.size, activation='linear', name='y_pred')(hiddenLayer)
 
         model = Model(inputs=[state_in, qValues_target, importance_in], outputs=qValues_pred, name='train_only')
 

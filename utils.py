@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from Learning_Module.hyperparameters_DQL import *
-
 
 RED = "\x1b[31m"
 GREEN = "\x1b[32m"
@@ -66,3 +64,35 @@ def generate_graphs(episodes, avgScores, epLengths, epDurations):
     # episodes_smooth = np.linspace(episodes.min(), episodes.max(), episodes.size * 2)
     #
     # plt.plot(episodes_smooth, f(episodes_smooth), color='firebrick', linewidth=1.5)
+
+def write_episodes(episodes, idx, path):
+    f = open(f"{path}/episodes-{idx}", 'w')
+    for i, x in enumerate(episodes):
+        if i == 0: f.write(f"[{x}")
+        elif i == episodes.size - 1: f.write(f",{x}]")
+        else: f.write(f",{x}")
+    f.close()
+
+def write_avg_scores(avg_scores, idx, path):
+    f = open(f"{path}/avg_scores-{idx}", 'w')
+    for i, x in enumerate(avg_scores):
+        if i == 0: f.write(f"[{x}")
+        elif i == avg_scores.size - 1: f.write(f",{x}]")
+        else: f.write(f",{x}")
+    f.close()
+
+def write_avg_lengths(avg_lengths, idx, path):
+    f = open(f"{path}/avg_lengths-{idx}", 'w')
+    for i, x in enumerate(avg_lengths):
+        if i == 0: f.write(f"[{x}")
+        elif i == avg_lengths.size - 1: f.write(f",{x}]")
+        else: f.write(f",{x}")
+    f.close()
+
+def write_avg_durations(avg_durations, idx, path):
+    f = open(f"{path}/avg_durations-{idx}", 'w')
+    for i, x in enumerate(avg_durations):
+        if i == 0: f.write(f"[{x}")
+        elif i == avg_durations.size - 1: f.write(f",{x}]")
+        else: f.write(f",{x}")
+    f.close()

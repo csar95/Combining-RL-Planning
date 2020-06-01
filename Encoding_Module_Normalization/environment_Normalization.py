@@ -5,13 +5,14 @@ import fast
 from copy import deepcopy
 from statistics import mean, stdev
 
-from fileIO_1 import *
+from fileIO_Normalization import *
+from hyperparameters_DQL import *
 
 
-class Environment:
+class EnvironmentNorm:
 
-    domainPath = RESOURCES_FOLDER + "elevators.pddl"
-    problemPath = RESOURCES_FOLDER + "elevators_p1.pddl"
+    domainPath = RESOURCES_FOLDER + "transport.pddl"
+    problemPath = RESOURCES_FOLDER + "transport_p1.pddl"
 
     def __init__(self):
         self.objIndependentPreds = set([])
@@ -376,11 +377,9 @@ class Environment:
     def get_reward(self, action, gain):
         reward = -1
         for rwd in self.allActions[action]["reward"].values():
-            reward -= (np.where(self.allRewards == rwd)[0][0] + 1) / self.allRewards.size
-            # reward -= rwd/MAX_REWARD
+            reward -= rwd
 
-        return reward + (gain * 15)
-        # return -1 + (gain * 10)
+        return reward + (gain * (GOAL_REWARD / len(self.goal_state)))
 
     '''
     Returns the z-score normalized vector of the state

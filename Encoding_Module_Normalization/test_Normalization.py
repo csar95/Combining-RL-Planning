@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import subprocess
-from environment_1 import *
+from environment_Normalization import *
 
 
 def run_test():

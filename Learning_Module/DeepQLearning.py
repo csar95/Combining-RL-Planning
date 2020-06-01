@@ -1,13 +1,10 @@
 import time
 import os
-
+import numpy as np
 from hyperparameters_DQL import *
-from Encoding_Module.environment import *
-# from DQNAgent import *
-from DDQNAgent import *
 
 
-def deep_q_learning_alg():
+def deep_q_learning_alg(env, agent):
 
     np_argmax = np.argmax
     np_append = np.append
@@ -74,8 +71,7 @@ def deep_q_learning_alg():
             avgLengths = np_append(avgLengths, average_length)
             avgDurations = np_append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
 
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Epsilon: {epsilon} | Steps: {step}")
-            colorPrint(str(average_duration), YELLOW)
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Average duration: {average_duration} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
             # if average_reward > GOAL_REWARD + GOAL_REWARD * ((len(env.goal_state) - 1) / len(env.goal_state)):
@@ -96,7 +92,7 @@ def deep_q_learning_alg():
 
     return avgScores, np.arange(AGGREGATE_STATS_EVERY, avgScores.size * AGGREGATE_STATS_EVERY + AGGREGATE_STATS_EVERY, step=AGGREGATE_STATS_EVERY), avgLengths, avgDurations
 
-def get_plan():
+def get_plan(env, agent):
     plan = []
 
     append = plan.append
@@ -130,16 +126,3 @@ def get_plan():
         step += 1
 
     return plan, episode_reward, done
-
-if __name__ == '__main__':
-    env = Environment()
-    # agent = DQNAgent(env)
-    agent = DDQNAgent(env)
-
-    avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg()
-    solution, score, finished = get_plan()
-
-    print(f"Length of solution: {len(solution)} | Score: {score} | Done: {finished}")
-    print(solution)
-
-    generate_graphs(episodes, avg_scores, avg_lengths, avg_durations)

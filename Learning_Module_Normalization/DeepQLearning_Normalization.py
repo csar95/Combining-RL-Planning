@@ -1,12 +1,10 @@
 import time
 import os
-
+import numpy as np
 from hyperparameters_DQL import *
-from Encoding_Module_1.environment_1 import *
-from DQNAgent_1 import *
 
 
-def deep_q_learning_alg():
+def deep_q_learning_alg_norm(env, agent):
 
     np_argmax = np.argmax
     np_append = np.append
@@ -38,7 +36,7 @@ def deep_q_learning_alg():
 
         start_time = time.time()
 
-        while not done:
+        while not done and step < MAX_STEP_PER_EPISODE:
             normalized_current_state = env_normalize(current_state)
 
             if np_random_number() > epsilon:  # Take legal action greedily
@@ -76,8 +74,7 @@ def deep_q_learning_alg():
             avgLengths = np_append(avgLengths, average_length)
             avgDurations = np_append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
 
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Epsilon: {epsilon} | Steps: {step}")
-            colorPrint(str(average_duration), YELLOW)
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Average duration: {average_duration} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
             # if average_reward >= GOAL_REWARD:
@@ -98,7 +95,7 @@ def deep_q_learning_alg():
 
     return avgScores, np.arange(AGGREGATE_STATS_EVERY, avgScores.size * AGGREGATE_STATS_EVERY + AGGREGATE_STATS_EVERY, step=AGGREGATE_STATS_EVERY), avgLengths, avgDurations
 
-def get_plan():
+def get_plan_norm(env, agent):
     plan = []
 
     append = plan.append
@@ -109,6 +106,7 @@ def get_plan():
     env_reset = env.reset
     env_step = env.step
     env_get_legal_actions = env.get_legal_actions
+    env_normalize = env.normalize
 
     episode_reward = 0
     step = 0
@@ -116,8 +114,10 @@ def get_plan():
     current_state = env_reset()
 
     while not done and step < 10:
+        normalized_current_state = env_normalize(current_state)
+
         # Take actions greedily
-        actionsQValues = agent_get_qs(current_state)
+        actionsQValues = agent_get_qs(normalized_current_state)
         legalActionsIds = env_get_legal_actions(current_state)
         # Make the argmax selection among the legal actions
         action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
@@ -132,15 +132,3 @@ def get_plan():
         step += 1
 
     return plan, episode_reward, done
-
-if __name__ == '__main__':
-    env = Environment()
-    agent = DQNAgent(env)
-
-    avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg()
-    solution, score, finished = get_plan()
-
-    print(f"Length of solution: {len(solution)} | Score: {score} | Done: {finished}")
-    print(solution)
-
-    generate_graphs(episodes, avg_scores, avg_lengths, avg_durations)

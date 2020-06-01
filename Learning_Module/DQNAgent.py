@@ -1,14 +1,11 @@
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation
-from keras.callbacks import TensorBoard
+from keras.layers import Dense
 from keras.optimizers import Adam
 from collections import deque
-import time
 import random
-import numpy as np
 
-from hyperparameters_DQL import *
 from utils import *
+from hyperparameters_DQL import *
 
 
 class DQNAgent:
@@ -35,7 +32,7 @@ class DQNAgent:
                         activation="relu",
                         input_dim=self.env.state.size)),
         model.add(Dense(units=self.env.allActionsKeys.size,
-                        activation="softmax"))
+                        activation="linear"))
 
         model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=['accuracy'])
 

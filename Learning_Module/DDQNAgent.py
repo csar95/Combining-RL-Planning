@@ -1,14 +1,11 @@
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation
-from keras.callbacks import TensorBoard
+from keras.layers import Dense
 from keras.optimizers import Adam
 from collections import deque
-import time
 import random
-import numpy as np
 
-from hyperparameters_DQL import *
 from utils import *
+from hyperparameters_DQL import *
 
 
 class DDQNAgent:
@@ -64,7 +61,7 @@ class DDQNAgent:
 
         next_states = np.array([transition[3] for transition in minibatch])
         next_qs_eval_minibatch = self.model.predict(next_states, batch_size=MINIBATCH_SIZE, use_multiprocessing=True)
-        next_qs_target_minibatch = self.targetModel.predict(next_states, batch_size=MINIBATCH_SIZE)
+        next_qs_target_minibatch = self.targetModel.predict(next_states, batch_size=MINIBATCH_SIZE, use_multiprocessing=True)
 
         env_get_legal_actions = self.env.get_legal_actions
         np_argmax = np.argmax
