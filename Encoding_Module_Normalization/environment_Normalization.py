@@ -6,7 +6,7 @@ from copy import deepcopy
 from statistics import mean, stdev
 
 from fileIO_Normalization import *
-from hyperparameters_DQL import *
+from hyperparameters import *
 
 
 class EnvironmentNorm:

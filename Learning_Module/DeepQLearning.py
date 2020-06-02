@@ -1,7 +1,7 @@
 import time
 import os
 import numpy as np
-from hyperparameters_DQL import *
+from hyperparameters import *
 
 
 def deep_q_learning_alg(env, agent):
@@ -109,7 +109,7 @@ def get_plan(env, agent):
     done = False
     current_state = env_reset()
 
-    while not done and step < 10:
+    while not done and step < 20:
         # Take actions greedily
         actionsQValues = agent_get_qs(current_state)
         legalActionsIds = env_get_legal_actions(current_state)

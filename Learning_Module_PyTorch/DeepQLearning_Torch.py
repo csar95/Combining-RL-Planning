@@ -1,7 +1,7 @@
 import time
 import os
 import numpy as np
-from hyperparameters_DQL import *
+from hyperparameters import *
 import torch as T
 
 

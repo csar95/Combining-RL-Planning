@@ -5,7 +5,7 @@ import fast
 from copy import deepcopy
 
 from fileIO import *
-from hyperparameters_DQL import *
+from hyperparameters import *
 
 
 class Environment:

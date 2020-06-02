@@ -1,39 +1,23 @@
 from Encoding_Module.environment import *
-from Learning_Module.DeepQLearning import *
-from Learning_Module.DQNAgent import *
-from Learning_Module.DDQNAgent import *
+from Learning_Module_PER.DDeepQLearningPER import *
+from Learning_Module_PER.DDQNAgentPER import *
 
-from plot import *
+# from plot import *
+from utils import *
 
 
 if __name__ == '__main__':
+    folder = "DoubleDQL_PER"
 
     env = Environment()
+    agent = DDQNAgentPER(env)
 
-    agent = DQNAgent(env)
-    agent_double = DDQNAgent(env)
-
-    episodes_set = []
-    avg_scores_set = []
-    avg_lengths_set = []
-    avg_durations_set = []
-
-    for i in range(5):
+    for idx in range(5):
         avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg(env, agent)
-        episodes_set.append(episodes)
-        avg_scores_set.append(avg_scores)
-        avg_lengths_set.append(avg_lengths)
-        avg_durations_set.append(avg_durations)
-        print(f"------------------------------ STANDARD DQL {i} ------------------------------")
 
-    for i in range(5):
-        avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg(env, agent_double)
-        episodes_set.append(episodes)
-        avg_scores_set.append(avg_scores)
-        avg_lengths_set.append(avg_lengths)
-        avg_durations_set.append(avg_durations)
-        print(f"------------------------------- DOUBLE DQL {i} -------------------------------")
+        write_data(episodes, folder, "episodes", idx)
+        write_data(avg_scores, folder, "avg_scores", idx)
+        write_data(avg_durations, folder, "avg_durations", idx)
+        write_data(avg_lengths, folder, "avg_lengths", idx)
 
-    generate_plots(episodes_set, avg_scores_set, avg_lengths_set, avg_durations_set)
-
-
+        print(f"------------------------------- DOUBLE DQL PER {idx} -------------------------------")

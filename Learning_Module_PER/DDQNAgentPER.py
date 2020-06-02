@@ -6,7 +6,7 @@ from collections import deque
 import random
 
 from utils import *
-from hyperparameters_DQL import *
+from hyperparameters import *
 
 
 def custom_MSE(qValues_target, qValues_pred, importance):

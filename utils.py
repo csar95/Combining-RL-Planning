@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import re
 
 
 RED = "\x1b[31m"
@@ -65,34 +66,66 @@ def generate_graphs(episodes, avgScores, epLengths, epDurations):
     #
     # plt.plot(episodes_smooth, f(episodes_smooth), color='firebrick', linewidth=1.5)
 
-def write_episodes(episodes, idx, path):
-    f = open(f"{path}/episodes-{idx}", 'w')
-    for i, x in enumerate(episodes):
+def generate_graphs_for_comparison(episodes_set, avg_scores_set, avg_lengths_set, avg_durations_set, folder):
+    plt.figure(figsize=(8, 6))
+
+    plt.xlim([0, max([np.max(episodes) for episodes in episodes_set])])
+    plt.xlabel('Episode')
+    plt.ylabel('Average episode score')
+    plt.title('Episode reward over time')
+
+    for idx, episodes in enumerate(episodes_set):
+        plt.plot(episodes, avg_scores_set[idx], color="firebrick" if idx < 5 else "dodgerblue", linewidth=.8)
+
+    plt.plot([], [], color="firebrick", linewidth=1.5, label="Double DQL")
+    plt.plot([], [], color="dodgerblue", linewidth=1.5, label="Double DQL (PER)")
+    plt.legend(loc="lower right")
+    plt.savefig(f'/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/{folder}/Learning curve.png')
+
+    # ------------------------------------------------------------------------------------------------ #
+
+    plt.clf()
+
+    plt.xlim([0, max([np.max(avg_durations) for avg_durations in avg_durations_set])])
+    plt.xlabel('Time step')
+    plt.ylabel('Episode')
+    plt.title('Episode per time step')
+
+    for idx, avg_durations in enumerate(avg_durations_set):
+        plt.plot(avg_durations, episodes_set[idx], color='firebrick' if idx < 5 else 'dodgerblue', linewidth=.8)
+
+    plt.plot([], [], color="firebrick", linewidth=1.5, label="Double DQL")
+    plt.plot([], [], color="dodgerblue", linewidth=1.5, label="Double DQL (PER)")
+    plt.legend(loc="lower right")
+    plt.savefig(f'/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/{folder}/Episodes duration.png')
+
+    # ------------------------------------------------------------------------------------------------ #
+
+    plt.clf()
+
+    plt.xlim([0, max([np.max(episodes) for episodes in episodes_set])])
+    plt.xlabel('Episode')
+    plt.ylabel('Average episode length')
+    plt.title('Episode length over time')
+
+    for idx, episodes in enumerate(episodes_set):
+        plt.plot(episodes, avg_lengths_set[idx], color='firebrick' if idx < 5 else 'dodgerblue', linewidth=.8)
+
+    plt.plot([], [], color="firebrick", linewidth=1.5, label="Double DQL")
+    plt.plot([], [], color="dodgerblue", linewidth=1.5, label="Double DQL (PER)")
+    plt.legend(loc="upper right")
+    plt.savefig(f'/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/{folder}/Episodes length.png')
+
+def write_data(data, folder, dataType, idx):
+    f = open(f"/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Data/{folder}/{dataType}-{idx}", 'w')
+    for i, x in enumerate(data):
         if i == 0: f.write(f"[{x}")
-        elif i == episodes.size - 1: f.write(f",{x}]")
+        elif i == data.size - 1: f.write(f",{x}]")
         else: f.write(f",{x}")
     f.close()
 
-def write_avg_scores(avg_scores, idx, path):
-    f = open(f"{path}/avg_scores-{idx}", 'w')
-    for i, x in enumerate(avg_scores):
-        if i == 0: f.write(f"[{x}")
-        elif i == avg_scores.size - 1: f.write(f",{x}]")
-        else: f.write(f",{x}")
+def read_data(folder, dataType, idx):
+    f = open(f"/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Data/{folder}/{dataType}-{idx}", 'r')
+    aux = f.readline().split(',')
     f.close()
-
-def write_avg_lengths(avg_lengths, idx, path):
-    f = open(f"{path}/avg_lengths-{idx}", 'w')
-    for i, x in enumerate(avg_lengths):
-        if i == 0: f.write(f"[{x}")
-        elif i == avg_lengths.size - 1: f.write(f",{x}]")
-        else: f.write(f",{x}")
-    f.close()
-
-def write_avg_durations(avg_durations, idx, path):
-    f = open(f"{path}/avg_durations-{idx}", 'w')
-    for i, x in enumerate(avg_durations):
-        if i == 0: f.write(f"[{x}")
-        elif i == avg_durations.size - 1: f.write(f",{x}]")
-        else: f.write(f",{x}")
-    f.close()
+    return np.array([float(re.sub('[\[\]]', '', e)) for e in aux])

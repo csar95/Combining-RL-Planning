@@ -6,7 +6,7 @@ from collections import deque
 import random
 import numpy as np
 
-from hyperparameters_DQL import *
+from hyperparameters import *
 
 
 class DeepQNetwork(nn.Module ):

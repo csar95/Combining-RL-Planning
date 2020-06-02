@@ -5,7 +5,7 @@ from collections import deque
 import random
 
 from utils import *
-from hyperparameters_DQL import *
+from hyperparameters import *
 
 
 class DDQNAgentNorm:
