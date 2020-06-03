@@ -3,9 +3,8 @@
 
     (:objects
         n0 n1 n2 n3 n4 n5 n6 - count
-        p0 p1  - passenger
-        fast0  - fast-elevator
-        slow0-0 - slow-elevator
+        p0 p1 p2  - passenger
+        slow0-0 slow1-0 - slow-elevator
     )
 
     (:init
@@ -18,34 +17,30 @@
         (above n4 n5) (above n4 n6)
         (above n5 n6)
 
-        (lift-at fast0 n6)
-        (passengers fast0 n0)
-        (can-hold fast0 n1) (can-hold fast0 n2) (can-hold fast0 n3) (can-hold fast0 n4)
-        (reachable-floor fast0 n0)(reachable-floor fast0 n3)(reachable-floor fast0 n6)
-
         (lift-at slow0-0 n2)
         (passengers slow0-0 n0)
         (can-hold slow0-0 n1) (can-hold slow0-0 n2) (can-hold slow0-0 n3)
-        (reachable-floor slow0-0 n0)(reachable-floor slow0-0 n1)(reachable-floor slow0-0 n2)(reachable-floor slow0-0 n3)(reachable-floor slow0-0 n4)(reachable-floor slow0-0 n5)(reachable-floor slow0-0 n6)
+        (reachable-floor slow0-0 n0)(reachable-floor slow0-0 n1)(reachable-floor slow0-0 n2)(reachable-floor slow0-0 n3)
+
+        (lift-at slow1-0 n6)
+        (passengers slow1-0 n0)
+        (can-hold slow1-0 n1) (can-hold slow1-0 n2) (can-hold slow1-0 n3)
+        (reachable-floor slow1-0 n3)(reachable-floor slow1-0 n4)(reachable-floor slow1-0 n5)(reachable-floor slow1-0 n6)
 
         (passenger-at p0 n5)
         (passenger-at p1 n0)
+        (passenger-at p2 n3)
 
-        (= (travel-slow n0 n1) 6) (= (travel-slow n0 n2) 7) (= (travel-slow n0 n3) 8) (= (travel-slow n0 n4) 9) (= (travel-slow n0 n5) 10) (= (travel-slow n0 n6) 11) (= (travel-slow n1 n2) 6) (= (travel-slow n1 n3) 7) (= (travel-slow n1 n4) 8) (= (travel-slow n1 n5) 9) (= (travel-slow n1 n6) 10) (= (travel-slow n2 n3) 6) (= (travel-slow n2 n4) 7) (= (travel-slow n2 n5) 8) (= (travel-slow n2 n6) 9) (= (travel-slow n3 n4) 6) (= (travel-slow n3 n5) 7) (= (travel-slow n3 n6) 8) (= (travel-slow n4 n5) 6) (= (travel-slow n4 n6) 7) (= (travel-slow n5 n6) 6)
-
-
-        (= (travel-fast n0 n3) 13) (= (travel-fast n0 n6) 25)
-
-        (= (travel-fast n3 n6) 13)
+        (= (travel-slow n0 n1) 6) (= (travel-slow n0 n2) 7) (= (travel-slow n0 n3) 8) (= (travel-slow n1 n2) 6) (= (travel-slow n1 n3) 7) (= (travel-slow n2 n3) 6) (= (travel-slow n3 n4) 6) (= (travel-slow n3 n5) 7) (= (travel-slow n3 n6) 8) (= (travel-slow n4 n5) 6) (= (travel-slow n4 n6) 7) (= (travel-slow n5 n6) 6)
 
         (= (total-cost) 0)
-
     )
 
     (:goal
         (and
         (passenger-at p0 n2)
-        (passenger-at p1 n6))
+        (passenger-at p1 n3)
+        (passenger-at p2 n6))
     )
 
     (:metric minimize (total-cost))

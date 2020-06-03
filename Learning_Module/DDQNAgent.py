@@ -43,11 +43,12 @@ class DDQNAgent:
 
     def update_replay_memory(self, transition):
         self.replay_memory.append(transition)
+        self.targetUpdateCounter += 1
 
     def get_qs(self, state):
         return self.model.predict(state.reshape(-1, state.size))[0]
 
-    def train(self, terminal_state):
+    def train(self):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
             return
 
@@ -87,9 +88,21 @@ class DDQNAgent:
 
         self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False)
 
-        if terminal_state:
-            self.targetUpdateCounter += 1
-
         # Update the target model periodically based on the local model
-        if self.targetUpdateCounter % UPDATE_TARGET_EVERY == 0:
-            self.targetModel.set_weights(self.model.get_weights())
+        if HARD_UPDATE and self.targetUpdateCounter % UPDATE_TARGET_EVERY == 0:
+            self.hard_update_target_model()
+        elif not HARD_UPDATE:
+            self.soft_update_target_model()
+
+    def hard_update_target_model(self):
+        self.targetModel.set_weights(self.model.get_weights())
+
+    def soft_update_target_model(self):
+        q_model_theta = self.model.get_weights()
+        target_model_theta = self.targetModel.get_weights()
+
+        for idx, (q_weight, target_weight) in enumerate(zip(q_model_theta, target_model_theta)):
+            target_weight = target_weight * (1 - TAU) + q_weight * TAU
+            target_model_theta[idx] = target_weight
+
+        self.targetModel.set_weights(target_model_theta)

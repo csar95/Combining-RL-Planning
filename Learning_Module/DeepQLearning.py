@@ -49,7 +49,7 @@ def deep_q_learning_alg(env, agent):
             episode_reward += reward
 
             agent_update_replay_memory((current_state, action, reward, new_state, done))
-            agent_train(done)
+            agent_train()
 
             current_state = new_state
             step += 1
@@ -71,7 +71,7 @@ def deep_q_learning_alg(env, agent):
             avgLengths = np_append(avgLengths, average_length)
             avgDurations = np_append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
 
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Average duration: {average_duration} | Epsilon: {epsilon}")
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Average duration: {average_duration} | Average length: {int(average_length)} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
             # if average_reward > GOAL_REWARD + GOAL_REWARD * ((len(env.goal_state) - 1) / len(env.goal_state)):

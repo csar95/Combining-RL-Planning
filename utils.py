@@ -66,7 +66,7 @@ def generate_graphs(episodes, avgScores, epLengths, epDurations):
     #
     # plt.plot(episodes_smooth, f(episodes_smooth), color='firebrick', linewidth=1.5)
 
-def generate_graphs_for_comparison(episodes_set, avg_scores_set, avg_lengths_set, avg_durations_set, folder):
+def generate_graphs_for_comparison(episodes_set, avg_scores_set, avg_lengths_set, avg_durations_set, folder, label1, label2):
     plt.figure(figsize=(8, 6))
 
     plt.xlim([0, max([np.max(episodes) for episodes in episodes_set])])
@@ -75,10 +75,10 @@ def generate_graphs_for_comparison(episodes_set, avg_scores_set, avg_lengths_set
     plt.title('Episode reward over time')
 
     for idx, episodes in enumerate(episodes_set):
-        plt.plot(episodes, avg_scores_set[idx], color="firebrick" if idx < 5 else "dodgerblue", linewidth=.8)
+        plt.plot(episodes, avg_scores_set[idx], color="firebrick" if idx < int(len(episodes_set)/2) else "dodgerblue", linewidth=.8)
 
-    plt.plot([], [], color="firebrick", linewidth=1.5, label="Double DQL")
-    plt.plot([], [], color="dodgerblue", linewidth=1.5, label="Double DQL (PER)")
+    plt.plot([], [], color="firebrick", linewidth=1.5, label=label1)
+    plt.plot([], [], color="dodgerblue", linewidth=1.5, label=label2)
     plt.legend(loc="lower right")
     plt.savefig(f'/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/{folder}/Learning curve.png')
 
@@ -94,8 +94,8 @@ def generate_graphs_for_comparison(episodes_set, avg_scores_set, avg_lengths_set
     for idx, avg_durations in enumerate(avg_durations_set):
         plt.plot(avg_durations, episodes_set[idx], color='firebrick' if idx < 5 else 'dodgerblue', linewidth=.8)
 
-    plt.plot([], [], color="firebrick", linewidth=1.5, label="Double DQL")
-    plt.plot([], [], color="dodgerblue", linewidth=1.5, label="Double DQL (PER)")
+    plt.plot([], [], color="firebrick", linewidth=1.5, label=label1)
+    plt.plot([], [], color="dodgerblue", linewidth=1.5, label=label2)
     plt.legend(loc="lower right")
     plt.savefig(f'/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/{folder}/Episodes duration.png')
 
@@ -111,8 +111,8 @@ def generate_graphs_for_comparison(episodes_set, avg_scores_set, avg_lengths_set
     for idx, episodes in enumerate(episodes_set):
         plt.plot(episodes, avg_lengths_set[idx], color='firebrick' if idx < 5 else 'dodgerblue', linewidth=.8)
 
-    plt.plot([], [], color="firebrick", linewidth=1.5, label="Double DQL")
-    plt.plot([], [], color="dodgerblue", linewidth=1.5, label="Double DQL (PER)")
+    plt.plot([], [], color="firebrick", linewidth=1.5, label=label1)
+    plt.plot([], [], color="dodgerblue", linewidth=1.5, label=label2)
     plt.legend(loc="upper right")
     plt.savefig(f'/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/{folder}/Episodes length.png')
 

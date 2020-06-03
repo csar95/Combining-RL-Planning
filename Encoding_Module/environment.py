@@ -10,8 +10,8 @@ from hyperparameters import *
 
 class Environment:
 
-    domainPath = RESOURCES_FOLDER + "transport.pddl"
-    problemPath = RESOURCES_FOLDER + "transport_p1.pddl"
+    domainPath = RESOURCES_FOLDER + DOMAIN
+    problemPath = RESOURCES_FOLDER + PROBLEM
 
     def __init__(self):
         self.objIndependentPreds = set([])
@@ -259,12 +259,9 @@ class Environment:
     def get_reward(self, action, gain):
         reward = -1
         for rwd in self.allActions[action]["reward"].values():
-            # reward -= rwd/MAX_REWARD
             reward -= rwd
 
-        return reward + (gain * (GOAL_REWARD / len(self.goal_state)))
-        # return reward + (gain * 15)
-        # return -1 + (gain * 10)
+        return reward + (gain * int(GOAL_REWARD / len(self.goal_state)))
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
