@@ -2,17 +2,20 @@ from Encoding_Module.environment import *
 from DeepQLearning import *
 from DQNAgent import *
 from DDQNAgent import *
+from DDQLAgent_PlanReuse import *
 from utils import *
 import time
 
 
 if __name__ == '__main__':
-    folder = "DDQL_elevators_p3"
+    folder = "DDQL_elevators_p9"
     idx = 0
 
     env = Environment()
     # agent = DQNAgent(env)
     agent = DDQNAgent(env)
+    # previousPlansExperiences = env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS)
+    # agent = DDQLAgent_PlanReuse(env, prevexp=previousPlansExperiences)
 
     start_time = time.time()
     avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg(env, agent)

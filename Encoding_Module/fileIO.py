@@ -275,3 +275,29 @@ def get_reward_value(aux, idx, i):
         value += ')'
 
     return value
+
+'''
+Transforms plans in the same domain into transition tuples that will be stored in the replay buffer
+'''
+def get_prior_transitions(path, numsol, env):
+    transitions = []
+
+    for file in list(map(str, range(numsol))):
+        filePath = path + f"/{file}.1"
+        f = open(filePath, 'r')
+        steps = f.readlines()
+
+        current_state = env.reset()
+
+        for action in steps:
+            actionName = '(' + re.sub('[()]', '', action.strip()).strip() + ')'
+            action = np.where(env.allActionsKeys == actionName)[0][0]
+
+            new_state, reward, done = env.step(action)
+            transitions.append((current_state, action, reward, new_state, done))
+
+            current_state = new_state
+
+        f.close()
+
+    return transitions

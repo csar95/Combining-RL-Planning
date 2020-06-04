@@ -57,7 +57,7 @@ def run_test():
     colorPrint("\n------- ALL ACTIONS IN THE ENVIRONMENT -------", CYAN)
     # print(env.allActions["(move-up-slow slow0-0 n2 n8)"])
     # print("(move-up-slow slow0-0 n16 n16)" in env.allActions)
-    print(env.allActions)
+    # print(env.allActions)
     print(len(env.allActions))
 
     # ------------------------------------------------------------------------ #

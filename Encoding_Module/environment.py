@@ -10,8 +10,8 @@ from hyperparameters import *
 
 class Environment:
 
-    domainPath = RESOURCES_FOLDER + DOMAIN
-    problemPath = RESOURCES_FOLDER + PROBLEM
+    domainPath = RESOURCES_FOLDER + DOMAIN + ".pddl"
+    problemPath = RESOURCES_FOLDER + PROBLEM + ".pddl"
 
     def __init__(self):
         self.objIndependentPreds = set([])
@@ -262,6 +262,10 @@ class Environment:
             reward -= rwd
 
         return reward + (gain * int(GOAL_REWARD / len(self.goal_state)))
+
+    def get_previous_plans(self, numsol):
+        path = RESOURCES_FOLDER + "Solutions/" + PROBLEM
+        return get_prior_transitions(path, numsol, self)
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
