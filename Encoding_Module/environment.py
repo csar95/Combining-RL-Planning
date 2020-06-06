@@ -53,6 +53,9 @@ class Environment:
 
         self.allActionsKeys = np.array(list(self.allActions.keys()))
 
+        self.reducedAllActionsIdx = np.array([])  # In case previous plans are provided to find the optimal policy, it
+        # stores the indeces of all the different actions appearing on those plans
+
         self.legalActionsPerState = {}
 
         self.allRewards = np.sort( self.get_all_rewards() )
@@ -232,11 +235,17 @@ class Environment:
     '''
     Returns an array of all legal actions from the current state
     '''
-    def get_legal_actions(self, state):
+    def get_legal_actions(self, state, reduceactionspace=False):
         try:
             return self.legalActionsPerState[tuple(state)]
         except KeyError:
-            self.legalActionsPerState[tuple(state)] = np.array(fast.get_legal_actions(state, self.allActions, self.allActionsKeys))
+            legalActions = np.array(fast.get_legal_actions(state, self.allActions, self.allActionsKeys))
+
+            if reduceactionspace:
+                reducedLegalActions = np.intersect1d(self.reducedAllActionsIdx, legalActions)
+                legalActions = reducedLegalActions if reducedLegalActions.size > 0 else legalActions
+
+            self.legalActionsPerState[tuple(state)] = legalActions
             return self.legalActionsPerState[tuple(state)]
 
     '''
@@ -263,8 +272,18 @@ class Environment:
 
         return reward + (gain * int(GOAL_REWARD / len(self.goal_state)))
 
-    def get_previous_plans(self, numsol):
+    '''
+    Generates and returns a list transitions corresponding to the sequence of actions from all previous solutions that
+    we are taking into consideration
+    '''
+    def get_previous_plans(self, numsol, reduceactionspace=False):
         path = RESOURCES_FOLDER + "Solutions/" + PROBLEM
+
+        if reduceactionspace:
+            reducedAllActionsKeys = get_reduce_action_space(path, numsol)
+            reducedAllActionsIdx = [np.where(self.allActionsKeys == key)[0][0] for key in reducedAllActionsKeys]
+            self.reducedAllActionsIdx = np.array(reducedAllActionsIdx)
+
         return get_prior_transitions(path, numsol, self)
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -288,10 +307,13 @@ class Environment:
     '''
     Returns the index at self.allActionsKeys of the 'legal' action selected at random from all possible actions
     '''
-    def sample(self):
+    def sample(self, reduceactionspace=False):
         try:
             return np.random.choice(self.legalActionsPerState[tuple(self.state)], 1)[0]
         except KeyError:
+            if reduceactionspace:
+                return np.random.choice(self.get_legal_actions(self.state, reduceactionspace), 1)[0]
+
             allActionsKeys = deepcopy(self.allActionsKeys)
             np.random.shuffle(allActionsKeys)
             return np.where(self.allActionsKeys == fast.get_random_legal_action(self.state, self.allActions, allActionsKeys))[0][0]

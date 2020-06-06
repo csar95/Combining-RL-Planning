@@ -8,27 +8,28 @@ import time
 
 
 if __name__ == '__main__':
-    folder = "DDQL_elevators_p9"
+    folder = ""
     idx = 0
 
+    # env = Environment()
     env = Environment()
+
     # agent = DQNAgent(env)
     agent = DDQNAgent(env)
-    # previousPlansExperiences = env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS)
-    # agent = DDQLAgent_PlanReuse(env, prevexp=previousPlansExperiences)
+    # agent = DDQLAgent_PlanReuse(env, prevexp=env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS, REDUCE_ACTION_SPACE))
 
     start_time = time.time()
-    avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg(env, agent)
+    scores, lengths, durations = deep_q_learning_alg(env, agent, REDUCE_ACTION_SPACE)
     colorPrint(str(time.time() - start_time), YELLOW)
 
-    solution, score, finished = get_plan(env, agent)
+    solution, score, finished = get_plan(env, agent, REDUCE_ACTION_SPACE)
 
     print(f"Length of solution: {len(solution)} | Score: {score} | Done: {finished}")
     print(solution)
 
-    write_data(episodes, folder, "episodes", idx)
-    write_data(avg_scores, folder, "avg_scores", idx)
-    write_data(avg_durations, folder, "avg_durations", idx)
-    write_data(avg_lengths, folder, "avg_lengths", idx)
+    write_data(scores, folder, "scores", idx)
+    write_data(lengths, folder, "lengths", idx)
+    write_data(durations, folder, "durations", idx)
 
+    episodes, avg_scores, avg_lengths, avg_durations = get_average_data_to_plot(scores, lengths, durations)
     generate_graphs(episodes, avg_scores, avg_lengths, avg_durations)

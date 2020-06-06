@@ -17,8 +17,8 @@ class ReplayBuffer:
         self.localBuffer.append(experience)
 
     def sample(self, batch_size):
-        samples = random.choices(self.previousExperiences, k=int(batch_size * REUSE_RATE))
-        samples.extend(random.choices(self.localBuffer, k=int(batch_size * (1 - REUSE_RATE))))
+        samples = random.sample(self.previousExperiences, k=int(batch_size * REUSE_RATE))
+        samples.extend(random.sample(self.localBuffer, k=int(batch_size * (1 - REUSE_RATE))))
 
         return samples
 
@@ -63,7 +63,7 @@ class DDQLAgent_PlanReuse:
         return self.model.predict(state.reshape(-1, state.size))[0]
 
     def train(self):
-        if len(self.replay_memory.localBuffer) < MIN_REPLAY_MEMORY_SIZE / 2:
+        if len(self.replay_memory.localBuffer) < MIN_REPLAY_MEMORY_SIZE * (1 - REUSE_RATE):
             return
 
         # Get MINIBATCH_SIZE random samples from replay_memory

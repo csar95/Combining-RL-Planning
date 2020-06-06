@@ -1,13 +1,12 @@
 import time
-import os
 import numpy as np
+import os
+
 from hyperparameters import *
 
 
-def deep_q_learning_alg(env, agent):
-
+def deep_q_learning_alg(env, agent, reduceactionspace=False):
     np_argmax = np.argmax
-    np_append = np.append
     np_random_number = np.random.random
 
     agent_get_qs = agent.get_qs
@@ -23,9 +22,6 @@ def deep_q_learning_alg(env, agent):
     ep_rewards = []
     ep_lengths = []
     ep_durations = []
-    avgScores = np.array([])
-    avgLengths = np.array([])
-    avgDurations = np.array([])
 
     for episode in range(1, EPISODES+1):
         episode_reward = 0
@@ -38,11 +34,11 @@ def deep_q_learning_alg(env, agent):
         while not done and step < MAX_STEP_PER_EPISODE:
             if np_random_number() > epsilon:  # Take legal action greedily
                 actionsQValues = agent_get_qs(current_state)
-                legalActionsIds = env_get_legal_actions(current_state)
+                legalActionsIds = env_get_legal_actions(current_state, reduceactionspace)
                 # Make the argmax selection among the legal actions
                 action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
             else:  # Take random legal action
-                action = env_sample()
+                action = env_sample(reduceactionspace)
 
             new_state, reward, done = env_step(action)
 
@@ -61,15 +57,8 @@ def deep_q_learning_alg(env, agent):
 
         if not episode % AGGREGATE_STATS_EVERY:
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:]) / len(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            # min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            # max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
-
             average_length = sum(ep_lengths[-AGGREGATE_STATS_EVERY:]) / len(ep_lengths[-AGGREGATE_STATS_EVERY:])
             average_duration = sum(ep_durations[-AGGREGATE_STATS_EVERY:]) / len(ep_durations[-AGGREGATE_STATS_EVERY:])
-
-            avgScores = np_append(avgScores, average_reward)
-            avgLengths = np_append(avgLengths, average_length)
-            avgDurations = np_append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
 
             print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Average duration: {average_duration} | Average length: {int(average_length)} | Epsilon: {epsilon}")
 
@@ -86,13 +75,13 @@ def deep_q_learning_alg(env, agent):
             epsilon *= EPSILON_DECAY
 
     # Create models folder
-    if not os.path.isdir('models'):
-        os.makedirs('models')
-        agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
+    # if not os.path.isdir('models'):
+    #     os.makedirs('models')
+    #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
 
-    return avgScores, np.arange(AGGREGATE_STATS_EVERY, avgScores.size * AGGREGATE_STATS_EVERY + AGGREGATE_STATS_EVERY, step=AGGREGATE_STATS_EVERY), avgLengths, avgDurations
+    return ep_rewards, ep_lengths, ep_durations
 
-def get_plan(env, agent):
+def get_plan(env, agent, reduceactionspace=False):
     plan = []
 
     append = plan.append
@@ -112,7 +101,7 @@ def get_plan(env, agent):
     while not done and step < 20:
         # Take actions greedily
         actionsQValues = agent_get_qs(current_state)
-        legalActionsIds = env_get_legal_actions(current_state)
+        legalActionsIds = env_get_legal_actions(current_state, reduceactionspace)
         # Make the argmax selection among the legal actions
         action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
 

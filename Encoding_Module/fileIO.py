@@ -277,7 +277,7 @@ def get_reward_value(aux, idx, i):
     return value
 
 '''
-Transforms plans in the same domain into transition tuples that will be stored in the replay buffer
+Transforms the prior plans from the same domain into transition tuples that will be stored in the replay buffer
 '''
 def get_prior_transitions(path, numsol, env):
     transitions = []
@@ -301,3 +301,21 @@ def get_prior_transitions(path, numsol, env):
         f.close()
 
     return transitions
+
+'''
+Returns a reduced version of the current state that only includes the actions listed in the prior plans
+'''
+def get_reduce_action_space(path, numsol):
+    reducedAllActionsKeys = np.array([])
+
+    for file in list(map(str, range(numsol))):
+        filePath = path + f"/{file}.1"
+        f = open(filePath, 'r')
+        steps = f.readlines()
+
+        for action in steps:
+            actionName = '(' + re.sub('[()]', '', action.strip()).strip() + ')'
+            if actionName not in reducedAllActionsKeys:
+                reducedAllActionsKeys = np.append(reducedAllActionsKeys, actionName)
+
+    return reducedAllActionsKeys

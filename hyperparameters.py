@@ -1,7 +1,7 @@
 RESOURCES_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Encoding_Module/Resources/"
 
 DOMAIN = "elevators"
-PROBLEM = "elevators_p9"
+PROBLEM = "elevators_p2"
 
 MODEL_NAME = "DQL_Elevators"
 
@@ -10,8 +10,8 @@ REPLAY_MEMORY_SIZE = 20_000  # 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000  # Minimum number of steps to start training
 MINIBATCH_SIZE = 64  # The number of samples we use for training
 UPDATE_TARGET_EVERY = 100
-HARD_UPDATE = True
-TAU = 0.05
+HARD_UPDATE = False  # True --> Hard update | False --> Soft update
+TAU = 0.01
 DISCOUNT = 0.99
 LEARNING_RATE = 0.001
 
@@ -25,5 +25,6 @@ MIN_EPSILON = 0.0001
 
 AGGREGATE_STATS_EVERY = 25  # (Episodes)
 
-NUMBER_OF_PREVIOUS_PLANS = 14
+NUMBER_OF_PREVIOUS_PLANS = 33
+REDUCE_ACTION_SPACE = False
 REUSE_RATE = 0.5

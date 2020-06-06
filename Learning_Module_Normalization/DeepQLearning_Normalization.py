@@ -5,9 +5,7 @@ from hyperparameters import *
 
 
 def deep_q_learning_alg_norm(env, agent):
-
     np_argmax = np.argmax
-    np_append = np.append
     np_random_number = np.random.random
 
     agent_get_qs = agent.get_qs
@@ -24,9 +22,6 @@ def deep_q_learning_alg_norm(env, agent):
     ep_rewards = []
     ep_lengths = []
     ep_durations = []
-    avgScores = np.array([])
-    avgLengths = np.array([])
-    avgDurations = np.array([])
 
     for episode in range(1, EPISODES+1):
         episode_reward = 0
@@ -64,17 +59,10 @@ def deep_q_learning_alg_norm(env, agent):
 
         if not episode % AGGREGATE_STATS_EVERY:
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:]) / len(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            # min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            # max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
-
             average_length = sum(ep_lengths[-AGGREGATE_STATS_EVERY:]) / len(ep_lengths[-AGGREGATE_STATS_EVERY:])
             average_duration = sum(ep_durations[-AGGREGATE_STATS_EVERY:]) / len(ep_durations[-AGGREGATE_STATS_EVERY:])
 
-            avgScores = np_append(avgScores, average_reward)
-            avgLengths = np_append(avgLengths, average_length)
-            avgDurations = np_append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
-
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Average duration: {average_duration} | Epsilon: {epsilon}")
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Average duration: {average_duration} | Average length: {int(average_length)} | Epsilon: {epsilon}")
 
             # Save model, but only when min reward is greater or equal a set value
             # if average_reward >= GOAL_REWARD:
@@ -89,11 +77,11 @@ def deep_q_learning_alg_norm(env, agent):
             epsilon *= EPSILON_DECAY
 
     # Create models folder
-    if not os.path.isdir('models'):
-        os.makedirs('models')
-        agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
+    # if not os.path.isdir('models'):
+    #     os.makedirs('models')
+    #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
 
-    return avgScores, np.arange(AGGREGATE_STATS_EVERY, avgScores.size * AGGREGATE_STATS_EVERY + AGGREGATE_STATS_EVERY, step=AGGREGATE_STATS_EVERY), avgLengths, avgDurations
+    return ep_rewards, ep_lengths, ep_durations
 
 def get_plan_norm(env, agent):
     plan = []
@@ -113,7 +101,7 @@ def get_plan_norm(env, agent):
     done = False
     current_state = env_reset()
 
-    while not done and step < 10:
+    while not done and step < 20:
         normalized_current_state = env_normalize(current_state)
 
         # Take actions greedily
