@@ -46,7 +46,7 @@ class DQNAgent:
 
     def train(self):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            return
+            return -1, -1
 
         # Get MINIBATCH_SIZE random samples from replay_memory
         minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
@@ -80,4 +80,6 @@ class DQNAgent:
             X.append(current_state)
             y.append(current_qs)
 
-        self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False)  #, callbacks=[self.tensorboard] if terminal_state else None)
+        history = self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False).history
+
+        return history['loss'][0], history['accuracy'][0]

@@ -1,12 +1,11 @@
-import time
-import os
-import numpy as np
+from metrics import *
 from hyperparameters import *
 import torch as T
+import time
+import numpy as np
 
 
 def deep_q_learning_alg(env, agent):
-
     t_max = T.max
     np_random_number = np.random.random
 
@@ -20,13 +19,15 @@ def deep_q_learning_alg(env, agent):
     env_get_legal_actions = env.get_legal_actions
 
     epsilon = 1  # Going to be decayed
-    ep_rewards = []
+    exp_results = Metrics()
 
     for episode in range(1, EPISODES+1):
         episode_reward = 0
         step = 1
         done = False
         current_state = env_reset()
+
+        start_time = time.time()
 
         while not done:
             # TODO: ALTERNATIVE (LAST OPTION) MAKE THE MODEL LEARN ILLEGAL ACTIONS BY GIVING A LARGE NEGATIVE REWARD AND NOT CHANGING THE STATE
@@ -49,30 +50,19 @@ def deep_q_learning_alg(env, agent):
             step += 1
 
         # Append episode reward to a list and log stats (every given number of episodes)
-        ep_rewards.append(episode_reward)
+        exp_results.add(episode_score=episode_reward,
+                        episode_length=step,
+                        episode_duration=time.time() - start_time)
 
-        if not episode % AGGREGATE_STATS_EVERY:
-            average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:]) / len(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            # min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            # max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
-
-            print(f"Episode {episode} --> Score: {episode_reward} | Average score: {average_reward} | Epsilon: {epsilon}")
-
-            # Save model, but only when min reward is greater or equal a set value
-            if average_reward >= GOAL_REWARD:
-                # Create models folder
-                if not os.path.isdir('models'):
-                    os.makedirs('models')
-                agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-                # agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
-                break
+        if episode % SHOW_STATS_EVERY == 0:
+            average_reward, average_length, average_duration, _, _ = exp_results.get_average_data(SHOW_STATS_EVERY)
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
-            # epsilon = max(MIN_EPSILON, epsilon)
 
-    return np.array(ep_rewards), np.arange(1, episode+1)
+    return exp_results
 
 def get_plan(env, agent):
     plan = []

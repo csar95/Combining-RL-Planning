@@ -1,16 +1,25 @@
 from Encoding_Module.environment import *
 from DeepQLearning_Torch import *
 from DQNAgent_Torch import *
+from utils import *
+import time
 
 
 if __name__ == '__main__':
+    folder = "DDQL_elevators_p4"
+    idx = 0
+
     env = Environment()
     agent = DQL_Agent(env)
 
-    avg_scores, episodes, avg_lengths, avg_durations = deep_q_learning_alg(env, agent)
+    start_time = time.time()
+    exp_results = deep_q_learning_alg(env, agent)
+    colorPrint(str(time.time() - start_time), YELLOW)
+
     solution, score, finished = get_plan(env, agent)
 
     print(f"Length of solution: {len(solution)} | Score: {score} | Done: {finished}")
     print(solution)
 
-    generate_graphs(episodes, avg_scores, avg_lengths, avg_durations)
+    exp_results.save_data(folder, idx)
+    exp_results.plot_results()

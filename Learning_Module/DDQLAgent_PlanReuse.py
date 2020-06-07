@@ -64,7 +64,7 @@ class DDQLAgent_PlanReuse:
 
     def train(self):
         if len(self.replay_memory.localBuffer) < MIN_REPLAY_MEMORY_SIZE * (1 - REUSE_RATE):
-            return
+            return -1, -1
 
         # Get MINIBATCH_SIZE random samples from replay_memory
         minibatch = self.replay_memory.sample(MINIBATCH_SIZE)
@@ -100,13 +100,15 @@ class DDQLAgent_PlanReuse:
             X.append(current_state)
             y.append(current_state_target_qs)
 
-        self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False)
+        history = self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False).history
 
         # Update the target model periodically based on the local model
         if HARD_UPDATE and self.targetUpdateCounter % UPDATE_TARGET_EVERY == 0:
             self.hard_update_target_model()
         elif not HARD_UPDATE:
             self.soft_update_target_model()
+
+        return history['loss'][0], history['accuracy'][0]
 
     def hard_update_target_model(self):
         self.targetModel.set_weights(self.model.get_weights())

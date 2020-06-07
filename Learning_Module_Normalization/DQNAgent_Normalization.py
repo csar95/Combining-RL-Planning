@@ -47,9 +47,9 @@ class DDQNAgentNorm:
     def get_qs(self, state):
         return self.model.predict(state.reshape(-1, state.size))[0]
 
-    def train(self, terminal_state):
+    def train(self):  # ,terminal):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            return
+            return -1, -1
 
         # Get MINIBATCH_SIZE random samples from replay_memory
         minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
@@ -85,11 +85,25 @@ class DDQNAgentNorm:
             X.append(normalized_current_state)
             y.append(current_state_target_qs)
 
-        self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False)  #, callbacks=[self.tensorboard] if terminal_state else None)
-
-        if terminal_state:
-            self.targetUpdateCounter += 1
+        history = self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False).history  #, callbacks=[self.tensorboard] if terminal_state else None)
 
         # Update the target model periodically based on the local model
-        if self.targetUpdateCounter % UPDATE_TARGET_EVERY == 0:
-            self.targetModel.set_weights(self.model.get_weights())
+        if HARD_UPDATE and self.targetUpdateCounter % UPDATE_TARGET_EVERY == 0:
+            self.hard_update_target_model()
+        elif not HARD_UPDATE:
+            self.soft_update_target_model()
+
+        return history['loss'][0], history['accuracy'][0]
+
+    def hard_update_target_model(self):
+        self.targetModel.set_weights(self.model.get_weights())
+
+    def soft_update_target_model(self):
+        q_model_theta = self.model.get_weights()
+        target_model_theta = self.targetModel.get_weights()
+
+        for idx, (q_weight, target_weight) in enumerate(zip(q_model_theta, target_model_theta)):
+            target_weight = target_weight * (1 - TAU) + q_weight * TAU
+            target_model_theta[idx] = target_weight
+
+        self.targetModel.set_weights(target_model_theta)

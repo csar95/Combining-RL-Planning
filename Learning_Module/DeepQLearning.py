@@ -1,8 +1,7 @@
+from hyperparameters import *
+from metrics import *
 import time
 import numpy as np
-import os
-
-from hyperparameters import *
 
 
 def deep_q_learning_alg(env, agent, reduceactionspace=False):
@@ -19,11 +18,12 @@ def deep_q_learning_alg(env, agent, reduceactionspace=False):
     env_get_legal_actions = env.get_legal_actions
 
     epsilon = 1  # Going to be decayed
-    ep_rewards = []
-    ep_lengths = []
-    ep_durations = []
+    exp_results = Metrics()
 
     for episode in range(1, EPISODES+1):
+        ep_loss = []
+        ep_accuracy = []
+
         episode_reward = 0
         step = 0
         done = False
@@ -45,41 +45,31 @@ def deep_q_learning_alg(env, agent, reduceactionspace=False):
             episode_reward += reward
 
             agent_update_replay_memory((current_state, action, reward, new_state, done))
-            agent_train()
+
+            loss, accuracy = agent_train()
+            if loss != -1:
+                ep_loss.append(loss)
+                ep_accuracy.append(accuracy)
 
             current_state = new_state
             step += 1
 
         # Append episode reward to a list and log stats (every given number of episodes)
-        ep_rewards.append(episode_reward)
-        ep_lengths.append(step)
-        ep_durations.append(time.time() - start_time)
+        exp_results.add(episode_score=episode_reward,
+                        episode_length=step,
+                        episode_duration=time.time() - start_time,
+                        episode_avgLoss=sum(ep_loss) / len(ep_loss) if ep_loss else 0.0,
+                        episode_avgAccuracy=sum(ep_accuracy) / len(ep_accuracy) if ep_accuracy else 0.0)
 
-        if not episode % AGGREGATE_STATS_EVERY:
-            average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:]) / len(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            average_length = sum(ep_lengths[-AGGREGATE_STATS_EVERY:]) / len(ep_lengths[-AGGREGATE_STATS_EVERY:])
-            average_duration = sum(ep_durations[-AGGREGATE_STATS_EVERY:]) / len(ep_durations[-AGGREGATE_STATS_EVERY:])
-
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Average score: {int(average_reward)} | Average duration: {average_duration} | Average length: {int(average_length)} | Epsilon: {epsilon}")
-
-            # Save model, but only when min reward is greater or equal a set value
-            # if average_reward > GOAL_REWARD + GOAL_REWARD * ((len(env.goal_state) - 1) / len(env.goal_state)):
-            #     # Create models folder
-            #     if not os.path.isdir('models'):
-            #         os.makedirs('models')
-            #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-            #     break
+        if episode % SHOW_STATS_EVERY == 0:
+            average_reward, average_length, average_duration, average_loss, average_accuracy = exp_results.get_average_data(SHOW_STATS_EVERY)
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. Accuracy: {average_accuracy} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
 
-    # Create models folder
-    # if not os.path.isdir('models'):
-    #     os.makedirs('models')
-    #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-
-    return ep_rewards, ep_lengths, ep_durations
+    return exp_results
 
 def get_plan(env, agent, reduceactionspace=False):
     plan = []

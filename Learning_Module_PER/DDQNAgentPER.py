@@ -88,9 +88,9 @@ class DDQNAgentPER:
                                    np.empty(shape=self.env.allActionsKeys.size).reshape(-1, self.env.allActionsKeys.size),
                                    np.empty(shape=self.env.allActionsKeys.size).reshape(-1, 1)])[0]
 
-    def train(self, terminal_state, epsilon, a=0.0):
+    def train(self, epsilon, a=0.0):
         if len(self.replay_memory.buffer) < MIN_REPLAY_MEMORY_SIZE:
-            return
+            return -1, -1
 
         # Get MINIBATCH_SIZE random samples from replay_memory
         minibatch, importance, indices = self.replay_memory.sample(batch_size=MINIBATCH_SIZE, priority_scale=a)
@@ -132,13 +132,26 @@ class DDQNAgentPER:
             X.append(current_state)
             y.append(current_state_target_qs)
 
-        self.model.fit([np.array(X), np.array(y), importance ** (1-epsilon)], batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False)
-
+        history = self.model.fit([np.array(X), np.array(y), importance ** (1-epsilon)], batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False).history
         self.replay_memory.set_priorities(indices, errors)
 
-        if terminal_state:
-            self.targetUpdateCounter += 1
-
         # Update the target model periodically based on the local model
-        if self.targetUpdateCounter % UPDATE_TARGET_EVERY == 0:
-            self.targetModel.set_weights(self.model.get_weights())
+        if HARD_UPDATE and self.targetUpdateCounter % UPDATE_TARGET_EVERY == 0:
+            self.hard_update_target_model()
+        elif not HARD_UPDATE:
+            self.soft_update_target_model()
+
+        return history['loss'][0], history['accuracy'][0]
+
+    def hard_update_target_model(self):
+        self.targetModel.set_weights(self.model.get_weights())
+
+    def soft_update_target_model(self):
+        q_model_theta = self.model.get_weights()
+        target_model_theta = self.targetModel.get_weights()
+
+        for idx, (q_weight, target_weight) in enumerate(zip(q_model_theta, target_model_theta)):
+            target_weight = target_weight * (1 - TAU) + q_weight * TAU
+            target_model_theta[idx] = target_weight
+
+        self.targetModel.set_weights(target_model_theta)

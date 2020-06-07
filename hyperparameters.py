@@ -1,7 +1,8 @@
 RESOURCES_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Encoding_Module/Resources/"
+FIGURES_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/"
 
 DOMAIN = "elevators"
-PROBLEM = "elevators_p2"
+PROBLEM = "elevators_p4"
 
 MODEL_NAME = "DQL_Elevators"
 
@@ -16,15 +17,16 @@ DISCOUNT = 0.99
 LEARNING_RATE = 0.001
 
 # Environment settings
-GOAL_REWARD = 650
-EPISODES = 2_500
+GOAL_REWARD = 800
+EPISODES = 4000
 MAX_STEP_PER_EPISODE = 100
-EPSILON_DECAY = 0.995
+EPSILON_DECAY = 0.9975
 MIN_EPSILON = 0.0001
 # MAX_REWARD = 13
 
-AGGREGATE_STATS_EVERY = 25  # (Episodes)
+SHOW_STATS_EVERY = 25  # (Episodes)
 
 NUMBER_OF_PREVIOUS_PLANS = 33
-REDUCE_ACTION_SPACE = False
-REUSE_RATE = 0.5
+REDUCE_ACTION_SPACE = False  # False --> Alg. uses full action space
+                             # True --> Alg. filters legal actions with the ones appearing on the prior plans whenever it's possible, otherwise it uses the full action space
+REUSE_RATE = 0.15625

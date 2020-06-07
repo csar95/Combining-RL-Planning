@@ -2,20 +2,26 @@ from Encoding_Module.environment import *
 from Learning_Module.DeepQLearning import *
 from Learning_Module.DDQNAgent import *
 
-from utils import *
-
 
 if __name__ == '__main__':
-    folder = ""
+    folder1 = "DDQL_elevators_p4"
+    folder2 = "DDQL_elevators_p4 (Prev. Plans)"
 
     env = Environment()
-    agent = DDQNAgent(env)
 
-    for idx in range(5):
-        scores, lengths, durations = deep_q_learning_alg(env, agent, REDUCE_ACTION_SPACE)
+    # for idx in range(1,3):
+    #     agent = DDQNAgent(env)
+    #
+    #     print(f"------------------------------- {idx} -------------------------------")
+    #
+    #     exp_results = deep_q_learning_alg(env, agent, False)
+    #     exp_results.save_data(folder1, idx)
 
-        write_data(scores, folder, "scores", idx)
-        write_data(lengths, folder, "lengths", idx)
-        write_data(durations, folder, "durations", idx)
+    for idx in [0, 3]:
+        env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS, True)
+        agent = DDQNAgent(env)
 
         print(f"------------------------------- {idx} -------------------------------")
+
+        exp_results = deep_q_learning_alg(env, agent, True)
+        exp_results.save_data(folder2, idx)
