@@ -32,12 +32,12 @@ def deep_q_learning_alg(env, agent, reduceactionspace=False):
         start_time = time.time()
 
         while not done and step < MAX_STEP_PER_EPISODE:
-            if np_random_number() > epsilon:  # Take legal action greedily
+            if np_random_number() > epsilon:  # Take legal action greedily (Exploitation)
                 actionsQValues = agent_get_qs(current_state)
                 legalActionsIds = env_get_legal_actions(current_state, reduceactionspace)
                 # Make the argmax selection among the legal actions
                 action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
-            else:  # Take random legal action
+            else:  # Take random legal action (Exploration)
                 action = env_sample(reduceactionspace)
 
             new_state, reward, done = env_step(action)

@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 
-def deep_q_learning_alg(env, agent):
+def deep_q_learning_alg_per(env, agent):
     np_argmax = np.argmax
     np_random_number = np.random.random
 

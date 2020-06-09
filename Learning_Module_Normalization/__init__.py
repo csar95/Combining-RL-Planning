@@ -1,7 +1,6 @@
 from Encoding_Module_Normalization.environment_Normalization import *
 from DeepQLearning_Normalization import *
-from DQNAgent_Normalization import *
-from hyperparameters import *
+from DDQNAgent_Normalization import *
 import time
 
 

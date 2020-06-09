@@ -3,28 +3,30 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 from collections import deque
 import random
-
 from utils import *
 from hyperparameters import *
 
 
 class ReplayBuffer:
-    def __init__(self, prevexp, maxlen):
-        self.localBuffer = deque(maxlen=maxlen)
+    def __init__(self, prevexp, maxlen, allexpmixed):
+        self.allExpMixed = allexpmixed
         self.previousExperiences = prevexp
+        self.localBuffer = deque(maxlen=(maxlen - len(self.previousExperiences)) if self.allExpMixed else maxlen)
 
     def add(self, experience):
         self.localBuffer.append(experience)
 
     def sample(self, batch_size):
-        samples = random.sample(self.previousExperiences, k=int(batch_size * REUSE_RATE))
-        samples.extend(random.sample(self.localBuffer, k=int(batch_size * (1 - REUSE_RATE))))
-
-        return samples
+        if self.allExpMixed:
+            return random.sample(list(self.localBuffer) + self.previousExperiences, k=batch_size)
+        else:
+            samples = random.sample(self.previousExperiences, k=int(batch_size * REUSE_RATE))
+            samples.extend(random.sample(self.localBuffer, k=int(batch_size * (1 - REUSE_RATE))))
+            return samples
 
 class DDQLAgent_PlanReuse:
 
-    def __init__(self, env, prevexp):
+    def __init__(self, env, prevexp, allexpmixed):
         self.env = env
 
         # Main model. The one that gets trained every step
@@ -34,7 +36,7 @@ class DDQLAgent_PlanReuse:
         self.targetModel.set_weights(self.model.get_weights())
         self.targetUpdateCounter = 0
 
-        self.replay_memory = ReplayBuffer(prevexp, maxlen=REPLAY_MEMORY_SIZE)
+        self.replay_memory = ReplayBuffer(prevexp, maxlen=REPLAY_MEMORY_SIZE, allexpmixed=allexpmixed)
 
     def create_model(self):
         model = Sequential()

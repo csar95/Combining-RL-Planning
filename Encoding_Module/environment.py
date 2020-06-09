@@ -286,6 +286,11 @@ class Environment:
 
         return get_prior_transitions(path, numsol, self)
 
+    def show_state(self, state):
+        for pred, idx in self.stateTerms.items():
+            if state[idx] == 1:
+                print(pred)
+
 # -------------------------------------------------------------------------------------------------------------------- #
 
     '''
@@ -316,7 +321,11 @@ class Environment:
 
             allActionsKeys = deepcopy(self.allActionsKeys)
             np.random.shuffle(allActionsKeys)
-            return np.where(self.allActionsKeys == fast.get_random_legal_action(self.state, self.allActions, allActionsKeys))[0][0]
+            try:
+                return np.where(self.allActionsKeys == fast.get_random_legal_action(self.state, self.allActions, allActionsKeys))[0][0]
+            except Exception:
+                self.show_state(self.state)
+                exit(1)
 
     '''
     Takes the index of a legal action from self.allActionsKeys and applies the effect to the state array

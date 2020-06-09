@@ -36,5 +36,4 @@
         :precondition (and (at ?v ?l) (in ?p ?v) (capacity-predecessor ?s1 ?s2) (capacity ?v ?s1))
         :effect (and (not (in ?p ?v)) (at ?p ?l) (capacity ?v ?s2) (not (capacity ?v ?s1)) (increase (total-cost) 1))
     )
-
 )

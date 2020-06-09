@@ -12,7 +12,7 @@ if __name__ == '__main__':
     agent = DDQNAgentPER(env)
 
     start_time = time.time()
-    exp_results = deep_q_learning_alg(env, agent)
+    exp_results = deep_q_learning_alg_per(env, agent)
     colorPrint(str(time.time() - start_time), YELLOW)
 
     solution, score, finished = get_plan(env, agent)

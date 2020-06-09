@@ -11,8 +11,8 @@ from hyperparameters import *
 
 class EnvironmentNorm:
 
-    domainPath = RESOURCES_FOLDER + DOMAIN
-    problemPath = RESOURCES_FOLDER + PROBLEM
+    domainPath = RESOURCES_FOLDER + DOMAIN + ".pddl"
+    problemPath = RESOURCES_FOLDER + PROBLEM + ".pddl"
 
     def __init__(self):
         self.objIndependentPreds = set([])
