@@ -1,10 +1,11 @@
-from hyperparameters import *
 from metrics import *
+from hyperparameters import *
 import time
 import numpy as np
+import os
 
 
-def deep_q_learning_alg(env, agent, reduceactionspace=False):
+def deep_q_learning_alg(env, agent, idx, folder, reduceactionspace=False):
     np_argmax = np.argmax
     np_random_number = np.random.random
 
@@ -69,39 +70,10 @@ def deep_q_learning_alg(env, agent, reduceactionspace=False):
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
 
+    # Create models folder
+    pathtomodel = f"{MODELS_FOLDER}{folder}"
+    if not os.path.isdir(pathtomodel):
+        os.makedirs(pathtomodel)
+    agent.model.save(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
+
     return exp_results
-
-def get_plan(env, agent, reduceactionspace=False):
-    plan = []
-
-    append = plan.append
-    np_argmax = np.argmax
-
-    agent_get_qs = agent.get_qs
-
-    env_reset = env.reset
-    env_step = env.step
-    env_get_legal_actions = env.get_legal_actions
-
-    episode_reward = 0
-    step = 0
-    done = False
-    current_state = env_reset()
-
-    while not done and step < 20:
-        # Take actions greedily
-        actionsQValues = agent_get_qs(current_state)
-        legalActionsIds = env_get_legal_actions(current_state, reduceactionspace)
-        # Make the argmax selection among the legal actions
-        action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
-
-        append(env.allActionsKeys[action])
-
-        new_state, reward, done = env_step(action)
-
-        episode_reward += reward
-
-        current_state = new_state
-        step += 1
-
-    return plan, episode_reward, done

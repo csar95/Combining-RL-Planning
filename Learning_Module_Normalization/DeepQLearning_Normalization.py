@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 
-def deep_q_learning_alg_norm(env, agent):
+def deep_q_learning_alg_norm(env, agent, idx, folder):
     np_argmax = np.argmax
     np_random_number = np.random.random
 
@@ -81,47 +81,9 @@ def deep_q_learning_alg_norm(env, agent):
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
 
-    # Create models folder
-    # if not os.path.isdir('models'):
-    #     os.makedirs('models')
-    #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
+    pathtomodel = f"{MODELS_FOLDER}{folder}"
+    if not os.path.isdir(pathtomodel):
+        os.makedirs(pathtomodel)
+    agent.model.save(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
 
     return exp_results
-
-def get_plan_norm(env, agent):
-    plan = []
-
-    append = plan.append
-    np_argmax = np.argmax
-
-    agent_get_qs = agent.get_qs
-
-    env_reset = env.reset
-    env_step = env.step
-    env_get_legal_actions = env.get_legal_actions
-    env_normalize = env.normalize
-
-    episode_reward = 0
-    step = 0
-    done = False
-    current_state = env_reset()
-
-    while not done and step < 20:
-        normalized_current_state = env_normalize(current_state)
-
-        # Take actions greedily
-        actionsQValues = agent_get_qs(normalized_current_state)
-        legalActionsIds = env_get_legal_actions(current_state)
-        # Make the argmax selection among the legal actions
-        action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
-
-        append(env.allActionsKeys[action])
-
-        new_state, reward, done = env_step(action)
-
-        episode_reward += reward
-
-        current_state = new_state
-        step += 1
-
-    return plan, episode_reward, done

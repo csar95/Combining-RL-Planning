@@ -66,16 +66,16 @@ def save_comparison_graph(plt, title, xlabel, ylabel, xdata_set, ydata_set, labe
     plt.legend(loc=legendloc)
     plt.savefig(filename)
 
-def write_data(data, folder, dataType, idx):
-    f = open(f"/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Data/{folder}/{dataType}-{idx}", 'w')
+def write_data(data, folder, dataType):
+    f = open(f"{folder}/{dataType}", 'w')
     for i, x in enumerate(data):
         if i == 0: f.write(f"[{x}")
         elif i == len(data) - 1: f.write(f",{x}]")
         else: f.write(f",{x}")
     f.close()
 
-def read_data(folder, dataType, idx):
-    f = open(f"/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Data/{folder}/{dataType}-{idx}", 'r')
+def read_data(folder, dataType):
+    f = open(f"{folder}/{dataType}", 'r')
     aux = f.readline().split(',')
     f.close()
     return np.array([float(re.sub('[\[\]]', '', e)) for e in aux])

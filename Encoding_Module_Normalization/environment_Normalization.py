@@ -340,7 +340,7 @@ class EnvironmentNorm:
     Returns an array of all legal actions from the current state
     '''
 
-    def get_legal_actions(self, state):
+    def get_legal_actions(self, state, reduceactionspace=False):
         try:
             return self.legalActionsPerState[tuple(state)]
         except KeyError:

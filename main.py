@@ -1,27 +1,24 @@
-from Encoding_Module.environment import *
+from Planning_Module.Planner import *
 from Learning_Module.DeepQLearning import *
 from Learning_Module.DDQNAgent import *
+from Encoding_Module.environment import *
 
 
 if __name__ == '__main__':
-    folder1 = "DDQL_elevators_p4"
-    folder2 = "DDQL_elevators_p4 (Prev. Plans)"
+
+    folder = ""
+    idx = 0
 
     env = Environment()
+    agent = DDQNAgent(env)
 
-    # for idx in range(1,3):
-    #     agent = DDQNAgent(env)
-    #
-    #     print(f"------------------------------- {idx} -------------------------------")
-    #
-    #     exp_results = deep_q_learning_alg(env, agent, False)
-    #     exp_results.save_data(folder1, idx)
+    start_time = time.time()
+    exp_results = deep_q_learning_alg(env, agent, idx, folder, REDUCE_ACTION_SPACE)
+    colorPrint(str(time.time() - start_time), YELLOW)
 
-    for idx in [0, 3]:
-        env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS, True)
-        agent = DDQNAgent(env)
+    exp_results.save_data(folder, idx)
+    # exp_results.plot_results()
 
-        print(f"------------------------------- {idx} -------------------------------")
-
-        exp_results = deep_q_learning_alg(env, agent, True)
-        exp_results.save_data(folder2, idx)
+    planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{folder}/{PROBLEM}-{idx}.h5", reduceactionspace=REDUCE_ACTION_SPACE)
+    plan, score, finished = planner.get_plan()
+    planner.save_plan(plan, pathtodata=f"{DATA_FOLDER}{folder}/{idx}")

@@ -1,4 +1,4 @@
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense
 from keras.optimizers import Adam
 from collections import deque
@@ -10,11 +10,11 @@ from hyperparameters import *
 
 class DDQNAgent:
 
-    def __init__(self, env):
+    def __init__(self, env, pathtomodel=None):
         self.env = env
 
         # Main model. The one that gets trained every step
-        self.model = self.create_model()
+        self.model = self.create_model() if pathtomodel is None else self.load_model(pathtomodel)
 
         self.targetModel = self.create_model()
         self.targetModel.set_weights(self.model.get_weights())
@@ -108,3 +108,6 @@ class DDQNAgent:
             target_model_theta[idx] = target_weight
 
         self.targetModel.set_weights(target_model_theta)
+
+    def load_model(self, pathtofile):
+        return load_model(pathtofile)

@@ -2,6 +2,7 @@ from hyperparameters import *
 from utils import *
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
 class Metrics:
@@ -62,11 +63,15 @@ class Metrics:
         return np.arange(SHOW_STATS_EVERY, avgScores.size * SHOW_STATS_EVERY + SHOW_STATS_EVERY, step=SHOW_STATS_EVERY), avgScores, avgLengths, avgDurations, avgLoss, avgAccuracy
 
     def save_data(self, folder, idx):
-        write_data(self.scores, folder, "scores", idx)
-        write_data(self.lengths, folder, "lengths", idx)
-        write_data(self.durations, folder, "durations", idx)
-        write_data(self.avgLoss, folder, "avgLoss", idx)
-        write_data(self.avgAccuracy, folder, "avgAccuracy", idx)
+        pathtodata = f"{DATA_FOLDER}{folder}/{idx}"
+        if not os.path.isdir(pathtodata):
+            os.makedirs(pathtodata)
+
+        write_data(self.scores, pathtodata, "scores")
+        write_data(self.scores, pathtodata, "lengths")
+        write_data(self.scores, pathtodata, "durations")
+        write_data(self.scores, pathtodata, "avgLoss")
+        write_data(self.scores, pathtodata, "avgAccuracy")
 
     def plot_results(self, plot_avg_loss_accuracy=True):
         episodes, avg_scores, avg_lengths, avg_durations, avg_loss, avg_accuracy = self.get_average_data_to_plot()
