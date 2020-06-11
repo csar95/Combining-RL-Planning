@@ -1,5 +1,6 @@
 import numpy as np
 import re
+from statistics import mean
 
 
 RED = "\x1b[31m"
@@ -58,13 +59,40 @@ def save_comparison_graph(plt, title, xlabel, ylabel, xdata_set, ydata_set, labe
         plt.yticks(ticks=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1],
                    labels=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
 
-    for idx, episodes in enumerate(xdata_set):
-        plt.plot(episodes, ydata_set[idx], color="firebrick" if idx < idxlim else "dodgerblue", linewidth=.8)
+
+
+    mean_data1, min_data1, max_data1, mean_data2, min_data2, max_data2 = calculate_mean_min_max(ydata_set, idxlim)
+
+    plt.plot(xdata_set[0], mean_data1, color="firebrick", linewidth=.8)
+    plt.fill_between(xdata_set[0], min_data1, max_data1, alpha=.3, facecolor='firebrick')
+
+    plt.plot(xdata_set[idxlim], mean_data2, color="dodgerblue", linewidth=.8)
+    plt.fill_between(xdata_set[idxlim], min_data2, max_data2, alpha=.3, facecolor='dodgerblue')
 
     plt.plot([], [], color="firebrick", linewidth=1.5, label=label1)
     plt.plot([], [], color="dodgerblue", linewidth=1.5, label=label2)
     plt.legend(loc=legendloc)
     plt.savefig(filename)
+
+def calculate_mean_min_max(data_set, idxlim):
+    mean_data1, mean_data2 = np.array([]), np.array([])
+    min_data1, min_data2 = np.array([]), np.array([])
+    max_data1, max_data2 = np.array([]), np.array([])
+
+    for ep in range(data_set[0].size):
+        data1, data2 = [], []
+
+        for i in range(len(data_set)):
+            if i < idxlim:
+                data1.append(data_set[i][ep])
+            else:
+                data2.append(data_set[i][ep])
+
+        mean_data1, mean_data2 = np.append(mean_data1, mean(data1)), np.append(mean_data2, mean(data2))
+        min_data1, min_data2 = np.append(min_data1, min(data1)), np.append(min_data2, min(data2))
+        max_data1, max_data2 = np.append(max_data1, max(data1)), np.append(max_data2, max(data2))
+
+    return mean_data1, min_data1, max_data1, mean_data2, min_data2, max_data2
 
 def write_data(data, folder, dataType):
     f = open(f"{folder}/{dataType}", 'w')

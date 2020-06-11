@@ -1,7 +1,5 @@
-import time
-import numpy as np
-import subprocess
 from environment import *
+import time
 
 
 def run_test():
@@ -101,3 +99,6 @@ def run_test():
 if __name__ == '__main__':
     env = Environment()
     run_test()
+
+# Problem 4 --> 91  | 1068
+# Problem 5 --> 222 | 6096 --> 174 | 3704

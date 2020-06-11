@@ -3,27 +3,20 @@ from utils import *
 
 
 if __name__ == '__main__':
-    data_folder1 = "DDQL_elevators_p4"
-    data_folder2 = "DDQL_elevators_p4 (RP_3)"
-    comparison_folder = "DDQL_elevators_p4_Comparision_StandardvsPlanReuse (RP_3_Half)"
+    data_folder1 = "DoubleDQL"
+    data_folder2 = "DDQL_PR_3"
+    comparison_folder = "Standard_vs_PlanReuse_PR_3"
     label1 = "DDQL"
     label2 = "DDQL w/ Plan Reuse"
 
-    episodes_set = []
-    avg_scores_set = []
-    avg_lengths_set = []
-    avg_durations_set = []
-    avg_loss_set = []
-    avg_accuracy_set = []
+    episodes_set, avg_scores_set, avg_lengths_set, avg_durations_set, avg_loss_set, avg_accuracy_set = [], [], [], [], [], []
 
-    for i in range(2):
-        pathtodata = f"{DATA_FOLDER}{data_folder1}/{i}"
+    for i in range(3):
+        pathtodata = f"{DATA_FOLDER}{PROBLEM}/{data_folder1}/{i}"
 
-        scores = read_data(pathtodata, "scores")
-        lengths = read_data(pathtodata, "lengths")
-        durations = read_data(pathtodata, "durations")
-        avgLoss = read_data(pathtodata, "avgLoss")
-        avgAccuracy = read_data(pathtodata, "avgAccuracy")
+        scores, lengths, durations, avgLoss, avgAccuracy = read_data(pathtodata, "scores"), read_data(pathtodata, "lengths"), \
+                                                           read_data(pathtodata, "durations"), read_data(pathtodata, "avgLoss"), \
+                                                           read_data(pathtodata, "avgAccuracy")
 
         data = Metrics(scores, lengths, durations, avgLoss, avgAccuracy)
         episodes, avg_scores, avg_lengths, avg_durations, avg_loss, avg_accuracy = data.get_average_data_to_plot()
@@ -35,14 +28,12 @@ if __name__ == '__main__':
         avg_loss_set.append(avg_loss)
         avg_accuracy_set.append(avg_accuracy)
 
-    for i in range(3,5):
-        pathtodata = f"{DATA_FOLDER}{data_folder2}/{i}"
+    for i in range(3):
+        pathtodata = f"{DATA_FOLDER}{PROBLEM}/{data_folder2}/{i}"
 
-        scores = read_data(pathtodata, "scores")
-        lengths = read_data(pathtodata, "lengths")
-        durations = read_data(pathtodata, "durations")
-        avgLoss = read_data(pathtodata, "avgLoss")
-        avgAccuracy = read_data(pathtodata, "avgAccuracy")
+        scores, lengths, durations, avgLoss, avgAccuracy = read_data(pathtodata, "scores"), read_data(pathtodata, "lengths"), \
+                                                           read_data(pathtodata, "durations"), read_data(pathtodata, "avgLoss"), \
+                                                           read_data(pathtodata, "avgAccuracy")
 
         data = Metrics(scores, lengths, durations, avgLoss, avgAccuracy)
         episodes, avg_scores, avg_lengths, avg_durations, avg_loss, avg_accuracy = data.get_average_data_to_plot()
@@ -55,7 +46,7 @@ if __name__ == '__main__':
         avg_accuracy_set.append(avg_accuracy)
 
     Metrics.plot_results_for_comparison(comparison_folder, label1, label2, episodes_set, avg_scores_set,
-                                        avg_lengths_set, avg_durations_set, avg_loss_set, avg_accuracy_set, idxlim=2)
+                                        avg_lengths_set, avg_durations_set, avg_loss_set, avg_accuracy_set, idxlim=3)
 
 # episodes_set.append(episodes[:80])
 # avg_scores_set.append(avg_scores[:80])

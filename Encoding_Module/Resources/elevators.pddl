@@ -51,14 +51,13 @@
 
     (:action board
         :parameters (?p - passenger ?lift - elevator ?f - count ?n1 - count ?n2 - count)
-        :precondition (and  (lift-at ?lift ?f) (passenger-at ?p ?f) (passengers ?lift ?n1) (next ?n1 ?n2) (can-hold ?lift ?n2) )
+        :precondition (and (passenger-at ?p ?f) (lift-at ?lift ?f) (passengers ?lift ?n1) (next ?n1 ?n2) (can-hold ?lift ?n2) )
         :effect (and (not (passenger-at ?p ?f)) (boarded ?p ?lift) (not (passengers ?lift ?n1)) (passengers ?lift ?n2) )
     )
 
     (:action leave
         :parameters (?p - passenger ?lift - elevator ?f - count ?n1 - count ?n2 - count)
-        :precondition (and  (lift-at ?lift ?f) (boarded ?p ?lift) (passengers ?lift ?n1) (next ?n2 ?n1) )
+        :precondition (and (boarded ?p ?lift) (lift-at ?lift ?f) (passengers ?lift ?n1) (next ?n2 ?n1) )
         :effect (and (passenger-at ?p ?f) (not (boarded ?p ?lift)) (not (passengers ?lift ?n1)) (passengers ?lift ?n2) )
     )
 )
-

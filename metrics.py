@@ -56,14 +56,15 @@ class Metrics:
 
                 avgScores = np.append(avgScores, average_reward)
                 avgLengths = np.append(avgLengths, average_length)
-                avgDurations = np.append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
+                # avgDurations = np.append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
+                avgDurations = np.append(avgDurations, sum(self.durations[:i]))
                 avgLoss = np.append(avgLoss, average_loss)
                 avgAccuracy = np.append(avgAccuracy, average_accuracy)
 
         return np.arange(SHOW_STATS_EVERY, avgScores.size * SHOW_STATS_EVERY + SHOW_STATS_EVERY, step=SHOW_STATS_EVERY), avgScores, avgLengths, avgDurations, avgLoss, avgAccuracy
 
     def save_data(self, folder, idx):
-        pathtodata = f"{DATA_FOLDER}{folder}/{idx}"
+        pathtodata = f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}"
         if not os.path.isdir(pathtodata):
             os.makedirs(pathtodata)
 
@@ -113,35 +114,40 @@ class Metrics:
                    filename=f"{FIGURES_FOLDER}Episodes accuracy.png")
 
     @staticmethod
-    def plot_results_for_comparison(comparison_folder, label1, label2, episodes_set, avg_scores_set, avg_lengths_set, avg_durations_set, avg_loss_set, avg_accuracy_set, idxlim):
+    def plot_results_for_comparison(comparison_folder, label1, label2, episodes_set, avg_scores_set, avg_lengths_set, durations_set, avg_loss_set, avg_accuracy_set, idxlim):
+        pathtofigures = f"{FIGURES_FOLDER}{PROBLEM}/{comparison_folder}/"
+        if not os.path.isdir(pathtofigures):
+            os.makedirs(pathtofigures)
+
         plt.figure(figsize=(8, 6))
 
         # LEARNING CURVE --------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(plt, title='Episode reward over time', xlabel='Episode', ylabel='Average episode score',
+        save_comparison_graph(plt, title='Episode reward over time', xlabel='Episode', ylabel='Episode score',
                               xdata_set=episodes_set, ydata_set=avg_scores_set, label1=label1, label2=label2,
-                              filename=f"{FIGURES_FOLDER}{comparison_folder}/Learning curve.png", idxlim=idxlim,
+                              filename=f"{pathtofigures}Learning_Curve.png", idxlim=idxlim,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])])
 
         # EPISODES LENGTH -------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(plt, title='Episode length over time', xlabel='Episode', ylabel='Average episode length',
+        save_comparison_graph(plt, title='Episode length over time', xlabel='Episode', ylabel='Episode length',
                               xdata_set=episodes_set, ydata_set=avg_lengths_set, label1=label1, label2=label2,
-                              filename=f"{FIGURES_FOLDER}{comparison_folder}/Episodes length.png", idxlim=idxlim,
+                              filename=f"{pathtofigures}Episodes_Length.png", idxlim=idxlim,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], legendloc='upper right')
 
         # EPISODES DURATION ------------------------------------------------------------------------------------------ #
 
-        save_comparison_graph(plt, title='Episode per time step', xlabel='Time step', ylabel='Episode',
-                              xdata_set=avg_durations_set, ydata_set=episodes_set, label1=label1, label2=label2,
-                              idxlim=idxlim, filename=f"{FIGURES_FOLDER}{comparison_folder}/Episodes duration.png",
-                              xbounds=[0, max([np.max(avg_durations) for avg_durations in avg_durations_set])])
+        save_comparison_graph(plt, title='Computational time', xlabel='Episode', ylabel='Time (s)',
+                              xdata_set=episodes_set, ydata_set=durations_set, label1=label1, label2=label2,
+                              idxlim=idxlim, filename=f"{pathtofigures}Episodes_Duration.png",
+                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
+                              ybounds=[0, max([np.max(durations) for durations in durations_set])])
 
         # EPISODES LOSS ---------------------------------------------------------------------------------------------- #
 
         save_comparison_graph(plt, title='Episode average loss over time', xlabel='Episode', ylabel='Average episode loss',
                               xdata_set=episodes_set, ydata_set=avg_loss_set, label1=label1, label2=label2,
-                              filename=f"{FIGURES_FOLDER}{comparison_folder}/Episodes loss.png", idxlim=idxlim,
+                              filename=f"{pathtofigures}Episodes_Avg_Loss.png", idxlim=idxlim,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
                               legendloc='upper right', logscale=True)
 
@@ -149,6 +155,6 @@ class Metrics:
 
         save_comparison_graph(plt, title='Episode average accuracy over time', xlabel='Episode', ylabel='Average episode accuracy',
                               xdata_set=episodes_set, ydata_set=avg_accuracy_set, label1=label1, label2=label2,
-                              filename=f"{FIGURES_FOLDER}{comparison_folder}/Episodes accuracy.png", idxlim=idxlim,
+                              filename=f"{pathtofigures}Episodes_Avg_Accuracy.png", idxlim=idxlim,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[0,1])
 

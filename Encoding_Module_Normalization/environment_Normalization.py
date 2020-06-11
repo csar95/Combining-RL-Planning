@@ -1,12 +1,11 @@
+from fileIO_Normalization import *
+from hyperparameters import *
 import re
 import numpy as np
 import itertools
 import fast
 from copy import deepcopy
 from statistics import mean, stdev
-
-from fileIO_Normalization import *
-from hyperparameters import *
 
 
 class EnvironmentNorm:
