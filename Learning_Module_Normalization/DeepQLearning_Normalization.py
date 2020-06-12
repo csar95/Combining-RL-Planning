@@ -24,7 +24,7 @@ def deep_q_learning_alg_norm(env, agent, idx, folder):
 
     for episode in range(1, EPISODES+1):
         ep_loss = []
-        ep_accuracy = []
+        ep_fscore = []
 
         episode_reward = 0
         step = 0
@@ -50,10 +50,10 @@ def deep_q_learning_alg_norm(env, agent, idx, folder):
 
             agent_update_replay_memory((normalized_current_state, action, reward, env_normalize(new_state), new_state, done))
 
-            loss, accuracy = agent_train()
+            loss, recall, precision = agent_train()
             if loss != -1:
                 ep_loss.append(loss)
-                ep_accuracy.append(accuracy)
+                ep_fscore.append(2 * ((precision * recall) / (precision + recall)))
 
             current_state = new_state
             step += 1
@@ -63,11 +63,11 @@ def deep_q_learning_alg_norm(env, agent, idx, folder):
                         episode_length=step,
                         episode_duration=time.time() - start_time,
                         episode_avgLoss=sum(ep_loss) / len(ep_loss) if ep_loss else 0.0,
-                        episode_avgAccuracy=sum(ep_accuracy) / len(ep_accuracy) if ep_accuracy else 0.0)
+                        episode_avgFScore=sum(ep_fscore) / len(ep_fscore) if ep_fscore else 0.0)
 
         if episode % SHOW_STATS_EVERY == 0:
-            average_reward, average_length, average_duration, average_loss, average_accuracy = exp_results.get_average_data(SHOW_STATS_EVERY)
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. Accuracy: {average_accuracy} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
+            average_reward, average_length, average_duration, average_loss, average_fscore = exp_results.get_average_data(SHOW_STATS_EVERY)
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. F-score: {average_fscore} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
 
         # Save model, but only when min reward is greater or equal a set value
             # if average_reward >= GOAL_REWARD:
@@ -81,9 +81,10 @@ def deep_q_learning_alg_norm(env, agent, idx, folder):
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
 
-    pathtomodel = f"{MODELS_FOLDER}{folder}"
+    # Create models folder
+    pathtomodel = f"{MODELS_FOLDER}{PROBLEM}/{folder}"
     if not os.path.isdir(pathtomodel):
         os.makedirs(pathtomodel)
-    agent.model.save(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
+    agent.model.save_weights(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
 
     return exp_results

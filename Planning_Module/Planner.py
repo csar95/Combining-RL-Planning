@@ -1,4 +1,4 @@
-from Learning_Module.DDQNAgent import *
+from Learning_Module.DQNAgent import *
 from Encoding_Module.environment import *
 from hyperparameters import *
 import os
@@ -8,7 +8,7 @@ class Planner:
 
     def __init__(self, env, pathtomodel=None, reduceactionspace=False):
         self.env = env
-        self.agent = DDQNAgent(env, pathtomodel)
+        self.agent = DQNAgent(env, pathtomodel)
         self.reduceactionspace = reduceactionspace
 
     def get_plan(self):

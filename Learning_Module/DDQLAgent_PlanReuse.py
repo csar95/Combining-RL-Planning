@@ -1,6 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+from keras.metrics import Precision, Recall
 from collections import deque
 import random
 from utils import *
@@ -53,7 +54,7 @@ class DDQLAgent_PlanReuse:
         model.add(Dense(units=self.env.allActionsKeys.size,
                         activation="linear"))
 
-        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=['accuracy'])
+        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=[Recall(), Precision()])
 
         return model
 
@@ -66,7 +67,7 @@ class DDQLAgent_PlanReuse:
 
     def train(self):
         if len(self.replay_memory.localBuffer) < MIN_REPLAY_MEMORY_SIZE * (1 - REUSE_RATE):
-            return -1, -1
+            return -1, -1, -1
 
         # Get MINIBATCH_SIZE random samples from replay_memory
         minibatch = self.replay_memory.sample(MINIBATCH_SIZE)
@@ -110,7 +111,7 @@ class DDQLAgent_PlanReuse:
         elif not HARD_UPDATE:
             self.soft_update_target_model()
 
-        return history['loss'][0], history['accuracy'][0]
+        return history['loss'][0], history['recall_1'][0], history['precision_1'][0]
 
     def hard_update_target_model(self):
         self.targetModel.set_weights(self.model.get_weights())

@@ -6,7 +6,7 @@ from Encoding_Module.environment import *
 
 if __name__ == '__main__':
 
-    folder = ""
+    folder = "DoubleDQL"
     idx = 0
 
     env = Environment()
@@ -19,6 +19,6 @@ if __name__ == '__main__':
     exp_results.save_data(folder, idx)
     # exp_results.plot_results()
 
-    planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{folder}/{PROBLEM}-{idx}.h5", reduceactionspace=REDUCE_ACTION_SPACE)
+    planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder}/{PROBLEM}-{idx}.h5", reduceactionspace=REDUCE_ACTION_SPACE)
     plan, score, finished = planner.get_plan()
-    planner.save_plan(plan, pathtodata=f"{DATA_FOLDER}{folder}/{idx}")
+    planner.save_plan(plan, pathtodata=f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}")

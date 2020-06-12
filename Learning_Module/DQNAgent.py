@@ -1,6 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+from keras.metrics import Precision, Recall
 from collections import deque
 import random
 
@@ -10,11 +11,13 @@ from hyperparameters import *
 
 class DQNAgent:
 
-    def __init__(self, env):
+    def __init__(self, env, pathtomodel=None):
         self.env = env
 
         # Main model. The one that gets trained every step
         self.model = self.create_model()
+        if pathtomodel is not None:
+            self.model.load_weights(pathtomodel)
 
         self.replay_memory = deque(maxlen=REPLAY_MEMORY_SIZE)
         # self.tensorboard = TensorBoard(log_dir=f"log/{MODEL_NAME}-{int(time.time())}")
@@ -34,7 +37,7 @@ class DQNAgent:
         model.add(Dense(units=self.env.allActionsKeys.size,
                         activation="linear"))
 
-        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=['accuracy'])
+        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=[Recall(name="recall"), Precision(name="precision")])
 
         return model
 
@@ -46,7 +49,7 @@ class DQNAgent:
 
     def train(self):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            return -1, -1
+            return -1, -1, -1
 
         # Get MINIBATCH_SIZE random samples from replay_memory
         minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
@@ -82,4 +85,4 @@ class DQNAgent:
 
         history = self.model.fit(np.array(X), np.array(y), batch_size=MINIBATCH_SIZE, verbose=0, shuffle=False).history
 
-        return history['loss'][0], history['accuracy'][0]
+        return history['loss'][0], history['recall'][0], history['precision'][0]

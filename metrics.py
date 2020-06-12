@@ -7,21 +7,21 @@ import os
 
 class Metrics:
 
-    def __init__(self, scores=None, lengths=None, durations=None, avgLoss=None, avgAccuracy=None):
+    def __init__(self, scores=None, lengths=None, durations=None, avgLoss=None, avgFScore=None):
         self.scores = [] if scores is None else scores
         self.lengths = [] if lengths is None else lengths
         self.durations = [] if durations is None else durations
         self.avgLoss = [] if avgLoss is None else avgLoss
-        self.avgAccuracy = [] if avgAccuracy is None else avgAccuracy
+        self.avgFScore = [] if avgFScore is None else avgFScore
 
-    def add(self, episode_score, episode_length, episode_duration, episode_avgLoss=None, episode_avgAccuracy=None):
+    def add(self, episode_score, episode_length, episode_duration, episode_avgLoss=None, episode_avgFScore=None):
         self.scores.append(episode_score)
         self.lengths.append(episode_length)
         self.durations.append(episode_duration)
         if episode_avgLoss is not None:
             self.avgLoss.append(episode_avgLoss)
-        if episode_avgAccuracy is not None:
-            self.avgAccuracy.append(episode_avgAccuracy)
+        if episode_avgFScore is not None:
+            self.avgFScore.append(episode_avgFScore)
 
     def get_average_data(self, segment, idx=None):
         if idx is None:
@@ -31,27 +31,23 @@ class Metrics:
         average_length = sum(self.lengths[idx-segment:idx]) / len(self.lengths[idx-segment:idx])
         average_duration = sum(self.durations[idx-segment:idx]) / len(self.durations[idx-segment:idx])
 
-        if len(self.avgLoss) > 0 and len(self.avgAccuracy) > 0:
+        if len(self.avgLoss) > 0 and len(self.avgFScore) > 0:
             suma = list(filter(lambda loss: loss != 0, self.avgLoss[idx-segment:idx]))
             average_loss = sum(suma) / len(suma)
 
-            suma = list(filter(lambda accuracy: accuracy != 0, self.avgAccuracy[idx-segment:idx]))
-            average_accuracy = sum(suma) / len(suma)
+            suma = list(filter(lambda fscore: fscore != 0, self.avgFScore[idx - segment:idx]))
+            average_fscore = sum(suma) / len(suma)
 
-            return average_reward, average_length, average_duration, average_loss, average_accuracy
+            return average_reward, average_length, average_duration, average_loss, average_fscore
         else:
             return average_reward, average_length, average_duration, None, None
 
     def get_average_data_to_plot(self):
-        avgScores = np.array([])
-        avgLengths = np.array([])
-        avgDurations = np.array([])
-        avgLoss = np.array([])
-        avgAccuracy = np.array([])
+        avgScores, avgLengths, avgDurations, avgLoss, avgFScore = np.array([]), np.array([]), np.array([]), np.array([]), np.array([])
 
         for i in range(1, EPISODES+1):
             if i % SHOW_STATS_EVERY == 0:
-                average_reward, average_length, average_duration, average_loss, average_accuracy = \
+                average_reward, average_length, average_duration, average_loss, average_fscore = \
                     self.get_average_data(SHOW_STATS_EVERY, i)
 
                 avgScores = np.append(avgScores, average_reward)
@@ -59,9 +55,9 @@ class Metrics:
                 # avgDurations = np.append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
                 avgDurations = np.append(avgDurations, sum(self.durations[:i]))
                 avgLoss = np.append(avgLoss, average_loss)
-                avgAccuracy = np.append(avgAccuracy, average_accuracy)
+                avgFScore = np.append(avgFScore, average_fscore)
 
-        return np.arange(SHOW_STATS_EVERY, avgScores.size * SHOW_STATS_EVERY + SHOW_STATS_EVERY, step=SHOW_STATS_EVERY), avgScores, avgLengths, avgDurations, avgLoss, avgAccuracy
+        return np.arange(SHOW_STATS_EVERY, avgScores.size * SHOW_STATS_EVERY + SHOW_STATS_EVERY, step=SHOW_STATS_EVERY), avgScores, avgLengths, avgDurations, avgLoss, avgFScore
 
     def save_data(self, folder, idx):
         pathtodata = f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}"
@@ -69,13 +65,13 @@ class Metrics:
             os.makedirs(pathtodata)
 
         write_data(self.scores, pathtodata, "scores")
-        write_data(self.scores, pathtodata, "lengths")
-        write_data(self.scores, pathtodata, "durations")
-        write_data(self.scores, pathtodata, "avgLoss")
-        write_data(self.scores, pathtodata, "avgAccuracy")
+        write_data(self.lengths, pathtodata, "lengths")
+        write_data(self.durations, pathtodata, "durations")
+        write_data(self.avgLoss, pathtodata, "avgLoss")
+        write_data(self.avgFScore, pathtodata, "avgFScore")
 
-    def plot_results(self, plot_avg_loss_accuracy=True):
-        episodes, avg_scores, avg_lengths, avg_durations, avg_loss, avg_accuracy = self.get_average_data_to_plot()
+    def plot_results(self, plot_avg_loss_fscore=True):
+        episodes, avg_scores, avg_lengths, avg_durations, avg_loss, avg_fscore = self.get_average_data_to_plot()
 
         plt.figure(figsize=(8, 6))
 
@@ -101,20 +97,20 @@ class Metrics:
 
         save_graph(plt, title='Episode average loss over time', xlabel='Episode', ylabel='Average episode loss',
                    xbounds=[0, np.max(episodes)],
-                   xdata=episodes if plot_avg_loss_accuracy else np.arange(np.max(episodes) - len(self.avgLoss), np.max(episodes)),
-                   ydata=avg_loss if plot_avg_loss_accuracy else self.avgLoss,
+                   xdata=episodes if plot_avg_loss_fscore else np.arange(np.max(episodes) - len(self.avgLoss), np.max(episodes)),
+                   ydata=avg_loss if plot_avg_loss_fscore else self.avgLoss,
                    filename=f"{FIGURES_FOLDER}Episodes loss.png", logscale=True)
 
-        # EPISODES ACCURACY ------------------------------------------------------------------------------------------ #
+        # EPISODES F-SCORE ------------------------------------------------------------------------------------------- #
 
-        save_graph(plt, title='Episode average accuracy over time', xlabel='Episode', ylabel='Average episode accuracy',
+        save_graph(plt, title='Episode average F-score over time', xlabel='Episode', ylabel='Average episode F-score',
                    xbounds=[0, np.max(episodes)], ybounds=[0,1],
-                   xdata=episodes if plot_avg_loss_accuracy else np.arange(np.max(episodes) - len(self.avgAccuracy), np.max(episodes)),
-                   ydata=avg_accuracy if plot_avg_loss_accuracy else self.avgAccuracy,
-                   filename=f"{FIGURES_FOLDER}Episodes accuracy.png")
+                   xdata=episodes if plot_avg_loss_fscore else np.arange(np.max(episodes) - len(self.avgFScore), np.max(episodes)),
+                   ydata=avg_fscore if plot_avg_loss_fscore else self.avgFScore,
+                   filename=f"{FIGURES_FOLDER}Episodes F-score.png")
 
     @staticmethod
-    def plot_results_for_comparison(comparison_folder, label1, label2, episodes_set, avg_scores_set, avg_lengths_set, durations_set, avg_loss_set, avg_accuracy_set, idxlim):
+    def plot_results_for_comparison(comparison_folder, label1, label2, episodes_set, avg_scores_set, avg_lengths_set, durations_set, avg_loss_set, avg_fscore_set, idxlim):
         pathtofigures = f"{FIGURES_FOLDER}{PROBLEM}/{comparison_folder}/"
         if not os.path.isdir(pathtofigures):
             os.makedirs(pathtofigures)
@@ -151,10 +147,10 @@ class Metrics:
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
                               legendloc='upper right', logscale=True)
 
-        # EPISODES ACCURACY ------------------------------------------------------------------------------------------ #
+        # EPISODES F-SCORE ------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(plt, title='Episode average accuracy over time', xlabel='Episode', ylabel='Average episode accuracy',
-                              xdata_set=episodes_set, ydata_set=avg_accuracy_set, label1=label1, label2=label2,
-                              filename=f"{pathtofigures}Episodes_Avg_Accuracy.png", idxlim=idxlim,
+        save_comparison_graph(plt, title='Episode average F-score over time', xlabel='Episode', ylabel='Average episode F-score',
+                              xdata_set=episodes_set, ydata_set=avg_fscore_set, label1=label1, label2=label2,
+                              filename=f"{pathtofigures}Episodes_Avg_F-score.png", idxlim=idxlim,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[0,1])
 

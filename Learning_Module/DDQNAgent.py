@@ -1,6 +1,7 @@
-from keras.models import Sequential, load_model
+from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+from keras.metrics import Recall, Precision
 from collections import deque
 import random
 
@@ -10,11 +11,11 @@ from hyperparameters import *
 
 class DDQNAgent:
 
-    def __init__(self, env, pathtomodel=None):
+    def __init__(self, env):
         self.env = env
 
         # Main model. The one that gets trained every step
-        self.model = self.create_model() if pathtomodel is None else self.load_model(pathtomodel)
+        self.model = self.create_model()
 
         self.targetModel = self.create_model()
         self.targetModel.set_weights(self.model.get_weights())
@@ -37,7 +38,7 @@ class DDQNAgent:
         model.add(Dense(units=self.env.allActionsKeys.size,
                         activation="linear"))
 
-        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=['accuracy'])
+        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=[Recall(name="recall"), Precision(name="precision")])
 
         return model
 
@@ -50,7 +51,7 @@ class DDQNAgent:
 
     def train(self):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
-            return -1, -1
+            return -1, -1, -1
 
         # Get MINIBATCH_SIZE random samples from replay_memory
         minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
@@ -94,7 +95,7 @@ class DDQNAgent:
         elif not HARD_UPDATE:
             self.soft_update_target_model()
 
-        return history['loss'][0], history['accuracy'][0]
+        return history['loss'][0], history['recall'][0], history['precision'][0]
 
     def hard_update_target_model(self):
         self.targetModel.set_weights(self.model.get_weights())
@@ -108,6 +109,3 @@ class DDQNAgent:
             target_model_theta[idx] = target_weight
 
         self.targetModel.set_weights(target_model_theta)
-
-    def load_model(self, pathtofile):
-        return load_model(pathtofile)

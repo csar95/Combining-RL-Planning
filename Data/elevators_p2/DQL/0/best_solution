@@ -1,0 +1,23 @@
+Length of solution: 20 | Reward: -39 | Real score: 19
+
+Solution:
+(board p1 slow0-0 n2 n0 n1)
+(move-down-fast fast0 n3 n0)
+(move-down-slow slow0-0 n2 n1)
+(leave p1 slow0-0 n1 n1 n0)
+(board p1 slow0-0 n1 n0 n1)
+(leave p1 slow0-0 n1 n1 n0)
+(board p1 slow0-0 n1 n0 n1)
+(leave p1 slow0-0 n1 n1 n0)
+(board p1 slow0-0 n1 n0 n1)
+(leave p1 slow0-0 n1 n1 n0)
+(board p1 slow0-0 n1 n0 n1)
+(leave p1 slow0-0 n1 n1 n0)
+(board p1 slow0-0 n1 n0 n1)
+(leave p1 slow0-0 n1 n1 n0)
+(board p1 slow0-0 n1 n0 n1)
+(leave p1 slow0-0 n1 n1 n0)
+(board p1 slow0-0 n1 n0 n1)
+(leave p1 slow0-0 n1 n1 n0)
+(board p1 slow0-0 n1 n0 n1)
+(leave p1 slow0-0 n1 n1 n0)

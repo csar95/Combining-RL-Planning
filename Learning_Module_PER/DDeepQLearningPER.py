@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 
-def deep_q_learning_alg_per(env, agent):
+def deep_q_learning_alg_per(env, agent, idx, folder):
     np_argmax = np.argmax
     np_random_number = np.random.random
 
@@ -22,7 +22,7 @@ def deep_q_learning_alg_per(env, agent):
 
     for episode in range(1, EPISODES+1):
         ep_loss = []
-        ep_accuracy = []
+        ep_fscore = []
 
         episode_reward = 0
         step = 0
@@ -46,10 +46,10 @@ def deep_q_learning_alg_per(env, agent):
 
             agent_update_replay_memory((current_state, action, reward, new_state, done))
 
-            loss, accuracy = agent_train(epsilon, a=0.7)
+            loss, recall, precision = agent_train(epsilon, a=0.7)
             if loss != -1:
                 ep_loss.append(loss)
-                ep_accuracy.append(accuracy)
+                ep_fscore.append(2 * ((precision * recall) / (precision + recall)))
 
             current_state = new_state
             step += 1
@@ -59,49 +59,20 @@ def deep_q_learning_alg_per(env, agent):
                         episode_length=step,
                         episode_duration=time.time() - start_time,
                         episode_avgLoss=sum(ep_loss) / len(ep_loss) if ep_loss else 0.0,
-                        episode_avgAccuracy=sum(ep_accuracy) / len(ep_accuracy) if ep_accuracy else 0.0)
+                        episode_avgFScore=sum(ep_fscore) / len(ep_fscore) if ep_fscore else 0.0)
 
         if not episode % SHOW_STATS_EVERY:
-            average_reward, average_length, average_duration, average_loss, average_accuracy = exp_results.get_average_data(SHOW_STATS_EVERY)
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. Accuracy: {average_accuracy} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
+            average_reward, average_length, average_duration, average_loss, average_fscore = exp_results.get_average_data(SHOW_STATS_EVERY)
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. F-score: {average_fscore} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
 
+    # Create models folder
+    pathtomodel = f"{MODELS_FOLDER}{PROBLEM}/{folder}"
+    if not os.path.isdir(pathtomodel):
+        os.makedirs(pathtomodel)
+    agent.model.save_weights(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
+
     return exp_results
-
-def get_plan(env, agent):
-    plan = []
-
-    append = plan.append
-    np_argmax = np.argmax
-
-    agent_get_qs = agent.get_qs
-
-    env_reset = env.reset
-    env_step = env.step
-    env_get_legal_actions = env.get_legal_actions
-
-    episode_reward = 0
-    step = 0
-    done = False
-    current_state = env_reset()
-
-    while not done and step < 20:
-        # Take actions greedily
-        actionsQValues = agent_get_qs(current_state)
-        legalActionsIds = env_get_legal_actions(current_state)
-        # Make the argmax selection among the legal actions
-        action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
-
-        append(env.allActionsKeys[action])
-
-        new_state, reward, done = env_step(action)
-
-        episode_reward += reward
-
-        current_state = new_state
-        step += 1
-
-    return plan, episode_reward, done
