@@ -308,8 +308,7 @@ class EnvironmentNorm:
         for typ in listOfObjectTypes:
             for key, value in self.types.items():
 
-                if not value:
-                    continue
+                if not value: continue
 
                 # Type doesn't have subtypes
                 elif key == typ and isinstance(value, list):
@@ -327,8 +326,7 @@ class EnvironmentNorm:
                 # Search typ within the nested dictionary
                 if isinstance(value, dict):
                     for k, v in value.items():
-                        if not v:
-                            continue
+                        if not v: continue
                         elif typ == k:
                             poolOfObjects.append(v)
                             break

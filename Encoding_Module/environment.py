@@ -302,7 +302,7 @@ class Environment:
 
         for prop in self.init_state:
             bit = '('
-            for idx, x in enumerate(list(filter(lambda elem: elem != '', prop.strip().split(" ")))):
+            for idx, x in enumerate(prop.strip().split()):
                 bit += x if idx == 0 else ' ' + x
             bit += ')'
             self.state[ self.stateTerms[bit] ] = 1

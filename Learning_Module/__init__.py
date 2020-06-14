@@ -9,12 +9,12 @@ import time
 
 
 if __name__ == '__main__':
-    folder = "DoubleDQL"
+    folder = "DDQL_PR_3"
     idx = 1
 
     # env = Environment()
     env = Environment()
-    # env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS, reduceactionspace=REDUCE_ACTION_SPACE)
+    env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS, reduceactionspace=REDUCE_ACTION_SPACE)
 
     # agent = DQNAgent(env)
     agent = DDQNAgent(env)
@@ -28,5 +28,6 @@ if __name__ == '__main__':
     # exp_results.plot_results()
 
     planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder}/{PROBLEM}-{idx}.h5", reduceactionspace=REDUCE_ACTION_SPACE)
-    solution, score, finished = planner.get_plan()
+    # solution, score, finished = planner.get_plan()
+    solution, score, finished = get_plan(env, agent, reduceactionspace=REDUCE_ACTION_SPACE)
     planner.save_plan(solution, pathtodata=f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}")

@@ -22,7 +22,6 @@ def deep_q_learning_alg_per(env, agent, idx, folder):
 
     for episode in range(1, EPISODES+1):
         ep_loss = []
-        ep_fscore = []
 
         episode_reward = 0
         step = 0
@@ -46,10 +45,9 @@ def deep_q_learning_alg_per(env, agent, idx, folder):
 
             agent_update_replay_memory((current_state, action, reward, new_state, done))
 
-            loss, recall, precision = agent_train(epsilon, a=0.7)
+            loss = agent_train(epsilon, a=0.7)
             if loss != -1:
                 ep_loss.append(loss)
-                ep_fscore.append(2 * ((precision * recall) / (precision + recall)))
 
             current_state = new_state
             step += 1
@@ -58,12 +56,11 @@ def deep_q_learning_alg_per(env, agent, idx, folder):
         exp_results.add(episode_score=episode_reward,
                         episode_length=step,
                         episode_duration=time.time() - start_time,
-                        episode_avgLoss=sum(ep_loss) / len(ep_loss) if ep_loss else 0.0,
-                        episode_avgFScore=sum(ep_fscore) / len(ep_fscore) if ep_fscore else 0.0)
+                        episode_avgLoss=sum(ep_loss) / len(ep_loss) if ep_loss else 0.0)
 
         if not episode % SHOW_STATS_EVERY:
-            average_reward, average_length, average_duration, average_loss, average_fscore = exp_results.get_average_data(SHOW_STATS_EVERY)
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. F-score: {average_fscore} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
+            average_reward, average_length, average_duration, average_loss, _ = exp_results.get_average_data(SHOW_STATS_EVERY)
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:

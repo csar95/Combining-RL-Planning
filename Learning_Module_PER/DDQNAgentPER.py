@@ -77,7 +77,7 @@ class DDQNAgentPER:
         model = Model(inputs=[state_in, qValues_target, importance_in], outputs=qValues_pred, name='train_only')
 
         model.add_loss(custom_MSE(qValues_target, qValues_pred, importance_in))
-        model.compile(loss=None, optimizer=Adam(lr=LEARNING_RATE), metrics=[Recall(), Precision()])
+        model.compile(loss=None, optimizer=Adam(lr=LEARNING_RATE))
 
         return model
 
@@ -91,7 +91,7 @@ class DDQNAgentPER:
 
     def train(self, epsilon, a=0.0):
         if len(self.replay_memory.buffer) < MIN_REPLAY_MEMORY_SIZE:
-            return -1, -1, -1
+            return -1
 
         # Get MINIBATCH_SIZE random samples from replay_memory
         minibatch, importance, indices = self.replay_memory.sample(batch_size=MINIBATCH_SIZE, priority_scale=a)
@@ -142,7 +142,7 @@ class DDQNAgentPER:
         elif not HARD_UPDATE:
             self.soft_update_target_model()
 
-        return history['loss'][0], history['recall_1'][0], history['precision_1'][0]
+        return history['loss'][0]
 
     def hard_update_target_model(self):
         self.targetModel.set_weights(self.model.get_weights())

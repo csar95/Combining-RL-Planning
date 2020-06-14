@@ -4,10 +4,10 @@ from utils import *
 
 if __name__ == '__main__':
     data_folder1 = "DoubleDQL"
-    data_folder2 = "DQL"
-    comparison_folder = "DDQL_vs_DQL"
+    data_folder2 = "DDQL_PR_3"
+    comparison_folder = "DDQL_vs_DDQL_PR_3"
     label1 = "Double DQL"
-    label2 = "DQL"
+    label2 = "DDQL w/ Plan Reuse (3)"
 
     episodes_set, avg_scores_set, avg_lengths_set, avg_durations_set, avg_loss_set, avg_fscore_set = [], [], [], [], [], []
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         avg_loss_set.append(avg_loss)
         avg_fscore_set.append(avg_fscore)
 
-    for i in range(3):
+    for i in range(1):
         pathtodata = f"{DATA_FOLDER}{PROBLEM}/{data_folder2}/{i}"
 
         scores, lengths, durations, avgLoss, avgFScore = read_data(pathtodata, "scores"), read_data(pathtodata, "lengths"), \

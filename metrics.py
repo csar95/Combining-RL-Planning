@@ -30,17 +30,17 @@ class Metrics:
         average_reward = sum(self.scores[idx-segment:idx]) / len(self.scores[idx-segment:idx])
         average_length = sum(self.lengths[idx-segment:idx]) / len(self.lengths[idx-segment:idx])
         average_duration = sum(self.durations[idx-segment:idx]) / len(self.durations[idx-segment:idx])
+        average_loss, average_fscore = None, None
 
-        if len(self.avgLoss) > 0 and len(self.avgFScore) > 0:
+        if len(self.avgLoss) > 0:
             suma = list(filter(lambda loss: loss != 0, self.avgLoss[idx-segment:idx]))
-            average_loss = sum(suma) / len(suma)
+            if suma: average_loss = sum(suma) / len(suma)
 
+        if len(self.avgFScore) > 0:
             suma = list(filter(lambda fscore: fscore != 0, self.avgFScore[idx - segment:idx]))
-            average_fscore = sum(suma) / len(suma)
+            if suma: average_fscore = sum(suma) / len(suma)
 
-            return average_reward, average_length, average_duration, average_loss, average_fscore
-        else:
-            return average_reward, average_length, average_duration, None, None
+        return average_reward, average_length, average_duration, average_loss, average_fscore
 
     def get_average_data_to_plot(self):
         avgScores, avgLengths, avgDurations, avgLoss, avgFScore = np.array([]), np.array([]), np.array([]), np.array([]), np.array([])

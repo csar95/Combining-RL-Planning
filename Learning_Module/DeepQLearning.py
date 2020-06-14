@@ -47,9 +47,7 @@ def deep_q_learning_alg(env, agent, idx, folder, reduceactionspace=False):
 
             agent_update_replay_memory((current_state, action, reward, new_state, done))
 
-            # s = time.time()
             loss, recall, precision = agent_train()
-            # print(f"{step} --> {time.time() - s}")
 
             if loss != -1:
                 ep_loss.append(loss)
@@ -68,7 +66,7 @@ def deep_q_learning_alg(env, agent, idx, folder, reduceactionspace=False):
         if episode % SHOW_STATS_EVERY == 0:
             average_reward, average_length, average_duration, average_loss, average_fscore = exp_results.get_average_data(SHOW_STATS_EVERY)
             print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. F-score: {average_fscore} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
-        # print(f"--------{episode}")
+
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
@@ -80,3 +78,28 @@ def deep_q_learning_alg(env, agent, idx, folder, reduceactionspace=False):
     agent.model.save_weights(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
 
     return exp_results
+
+def get_plan(env, agent, reduceactionspace=False):
+    plan = []
+
+    episode_reward = 0
+    step = 0
+    done = False
+    current_state = env.reset()
+
+    while not done and step < MAX_STEPS_PLANNER:
+        # Take actions greedily
+        actionsQValues = agent.get_qs(current_state)
+        legalActionsIds = env.get_legal_actions(current_state, reduceactionspace)
+        # Make the argmax selection among the legal actions
+        action = legalActionsIds[np.argmax(actionsQValues[legalActionsIds])]
+
+        plan.append(env.allActionsKeys[action])
+        new_state, reward, done = env.step(action)
+
+        episode_reward += reward
+
+        current_state = new_state
+        step += 1
+
+    return plan, episode_reward, done
