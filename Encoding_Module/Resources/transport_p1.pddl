@@ -2,15 +2,10 @@
     (:domain transport)
 
     (:objects
-        city-loc-1 - location
-        city-loc-2 - location
-        city-loc-3 - location
+        city-loc-1 city-loc-2 city-loc-3 - location
         truck-1 - vehicle
-        package-1 - package
-        package-2 - package
-        capacity-0 - capacity-number
-        capacity-1 - capacity-number
-        capacity-2 - capacity-number
+        package-1 package-2 - package
+        capacity-0 capacity-1 capacity-2 - capacity-number
     )
 
     (:init
