@@ -19,6 +19,8 @@ valid = {
     "n": False
 }
 
+colors_graph = ["firebrick", "forestgreen", "dodgerblue", "darkorchid"]
+
 def colorPrint(msg, color):
     print(color + msg + RESET)
 
@@ -50,7 +52,7 @@ def save_graph(plt, title, xlabel, ylabel, xdata, ydata, filename, xbounds=None,
     #
     # plt.plot(episodes_smooth, f(episodes_smooth), color='firebrick', linewidth=1.5)
 
-def save_comparison_graph(plt, title, xlabel, ylabel, xdata_set, ydata_set, label1, label2, filename, idxlim, xbounds=None, ybounds=None, legendloc='lower right', logscale=False):
+def save_comparison_graph(plt, title, xlabel, ylabel, xdata_set, ydata_set, labels, filename, separators, xbounds=None, ybounds=None, legendloc='lower right', logscale=False):
     plt.clf()
     set_graph_parameters(plt, title, xlabel, ylabel, xbounds, ybounds, logscale)
 
@@ -59,40 +61,35 @@ def save_comparison_graph(plt, title, xlabel, ylabel, xdata_set, ydata_set, labe
         plt.yticks(ticks=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1],
                    labels=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
 
+    for i, sp in enumerate(separators):
+        mean_data, min_data, max_data = calculate_mean_min_max(ydata_set, separators[i-1] if i > 0 else 0, sp)
 
+        color = colors_graph[i]
+        plt.plot(xdata_set[0], mean_data, color=color, linewidth=.8)
+        plt.fill_between(xdata_set[0], min_data, max_data, alpha=.3, facecolor=color)
 
-    mean_data1, min_data1, max_data1, mean_data2, min_data2, max_data2 = calculate_mean_min_max(ydata_set, idxlim)
+        plt.plot([], [], color=color, linewidth=1.5, label=labels[i])
 
-    plt.plot(xdata_set[0], mean_data1, color="firebrick", linewidth=.8)
-    plt.fill_between(xdata_set[0], min_data1, max_data1, alpha=.3, facecolor='firebrick')
-
-    plt.plot(xdata_set[idxlim], mean_data2, color="dodgerblue", linewidth=.8)
-    plt.fill_between(xdata_set[idxlim], min_data2, max_data2, alpha=.3, facecolor='dodgerblue')
-
-    plt.plot([], [], color="firebrick", linewidth=1.5, label=label1)
-    plt.plot([], [], color="dodgerblue", linewidth=1.5, label=label2)
     plt.legend(loc=legendloc)
     plt.savefig(filename)
 
-def calculate_mean_min_max(data_set, idxlim):
-    mean_data1, mean_data2 = np.array([]), np.array([])
-    min_data1, min_data2 = np.array([]), np.array([])
-    max_data1, max_data2 = np.array([]), np.array([])
+def calculate_mean_min_max(data_set, lim1, lim2):
+    mean_data = np.array([]), np.array([])
+    min_data = np.array([]), np.array([])
+    max_data  = np.array([]), np.array([])
 
     for ep in range(data_set[0].size):
-        data1, data2 = [], []
+        data = []
 
         for i in range(len(data_set)):
-            if i < idxlim:
-                data1.append(data_set[i][ep])
-            else:
-                data2.append(data_set[i][ep])
+            if lim1 <= i < lim2:
+                data.append(data_set[i][ep])
 
-        mean_data1, mean_data2 = np.append(mean_data1, mean(data1)), np.append(mean_data2, mean(data2))
-        min_data1, min_data2 = np.append(min_data1, min(data1)), np.append(min_data2, min(data2))
-        max_data1, max_data2 = np.append(max_data1, max(data1)), np.append(max_data2, max(data2))
+        mean_data = np.append(mean_data, mean(data))
+        min_data = np.append(min_data, min(data))
+        max_data = np.append(max_data, max(data))
 
-    return mean_data1, min_data1, max_data1, mean_data2, min_data2, max_data2
+    return mean_data, min_data, max_data
 
 def write_data(data, folder, dataType):
     f = open(f"{folder}/{dataType}", 'w')

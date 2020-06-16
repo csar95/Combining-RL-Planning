@@ -9,12 +9,11 @@ import time
 
 
 if __name__ == '__main__':
-    folder = "DDQL_PR_3"
-    idx = 1
+    folder = "DoubleDQL"
+    idx = 0
 
-    # env = Environment()
     env = Environment()
-    env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS, reduceactionspace=REDUCE_ACTION_SPACE)
+    # env.get_previous_plans(NUMBER_OF_PREVIOUS_PLANS, reduceactionspace=REDUCE_ACTION_SPACE)
 
     # agent = DQNAgent(env)
     agent = DDQNAgent(env)

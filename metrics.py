@@ -112,7 +112,7 @@ class Metrics:
                    filename=f"{FIGURES_FOLDER}Episodes F-score.png")
 
     @staticmethod
-    def plot_results_for_comparison(comparison_folder, label1, label2, episodes_set, avg_scores_set, avg_lengths_set, durations_set, avg_loss_set, avg_fscore_set, idxlim):
+    def plot_results_for_comparison(comparison_folder, labels, episodes_set, avg_scores_set, avg_lengths_set, durations_set, avg_loss_set, avg_fscore_set, separators):
         pathtofigures = f"{FIGURES_FOLDER}{PROBLEM}/{comparison_folder}/"
         if not os.path.isdir(pathtofigures):
             os.makedirs(pathtofigures)
@@ -122,37 +122,37 @@ class Metrics:
         # LEARNING CURVE --------------------------------------------------------------------------------------------- #
 
         save_comparison_graph(plt, title='Episode reward over time', xlabel='Episode', ylabel='Episode score',
-                              xdata_set=episodes_set, ydata_set=avg_scores_set, label1=label1, label2=label2,
-                              filename=f"{pathtofigures}Learning_Curve.png", idxlim=idxlim,
+                              xdata_set=episodes_set, ydata_set=avg_scores_set, labels=labels,
+                              filename=f"{pathtofigures}Learning_Curve.png", separators=separators,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])])
 
         # EPISODES LENGTH -------------------------------------------------------------------------------------------- #
 
         save_comparison_graph(plt, title='Episode length over time', xlabel='Episode', ylabel='Episode length',
-                              xdata_set=episodes_set, ydata_set=avg_lengths_set, label1=label1, label2=label2,
-                              filename=f"{pathtofigures}Episodes_Length.png", idxlim=idxlim,
+                              xdata_set=episodes_set, ydata_set=avg_lengths_set, labels=labels,
+                              filename=f"{pathtofigures}Episodes_Length.png", separators=separators,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], legendloc='upper right')
 
         # EPISODES DURATION ------------------------------------------------------------------------------------------ #
 
         save_comparison_graph(plt, title='Computational time', xlabel='Episode', ylabel='Time (s)',
-                              xdata_set=episodes_set, ydata_set=durations_set, label1=label1, label2=label2,
-                              idxlim=idxlim, filename=f"{pathtofigures}Episodes_Duration.png",
+                              xdata_set=episodes_set, ydata_set=durations_set, labels=labels,
+                              separators=separators, filename=f"{pathtofigures}Episodes_Duration.png",
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
                               ybounds=[0, max([np.max(durations) for durations in durations_set])])
 
         # EPISODES LOSS ---------------------------------------------------------------------------------------------- #
 
         save_comparison_graph(plt, title='Episode average loss over time', xlabel='Episode', ylabel='Average episode loss',
-                              xdata_set=episodes_set, ydata_set=avg_loss_set, label1=label1, label2=label2,
-                              filename=f"{pathtofigures}Episodes_Avg_Loss.png", idxlim=idxlim,
+                              xdata_set=episodes_set, ydata_set=avg_loss_set, labels=labels,
+                              filename=f"{pathtofigures}Episodes_Avg_Loss.png", separators=separators,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
                               legendloc='upper right', logscale=True)
 
         # EPISODES F-SCORE ------------------------------------------------------------------------------------------- #
 
         save_comparison_graph(plt, title='Episode average F-score over time', xlabel='Episode', ylabel='Average episode F-score',
-                              xdata_set=episodes_set, ydata_set=avg_fscore_set, label1=label1, label2=label2,
-                              filename=f"{pathtofigures}Episodes_Avg_F-score.png", idxlim=idxlim,
+                              xdata_set=episodes_set, ydata_set=avg_fscore_set, labels=labels,
+                              filename=f"{pathtofigures}Episodes_Avg_F-score.png", separators=separators,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[0,1])
 

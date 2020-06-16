@@ -50,7 +50,8 @@ class EnvironmentNorm:
         self.statsPerTerm = {}
         for (idx, objects) in self.stateTerms.values():
             lAux = list(range( len(objects) ))
-            self.statsPerTerm[idx] = (mean(lAux), stdev(lAux))
+            self.statsPerTerm[idx] = (min(lAux), max(lAux))
+            # self.statsPerTerm[idx] = (mean(lAux), stdev(lAux))
 
         # This will be useful to form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
@@ -379,13 +380,22 @@ class EnvironmentNorm:
         return reward + (gain * (GOAL_REWARD / len(self.goal_state)))
 
     '''
-    Returns the z-score normalized vector of the state
+    Returns the min-max normalized vector of the state
     '''
     def normalize(self, state):
         normalizedState = np.zeros(state.size, dtype=np.float64)
         for (idx, objects) in self.stateTerms.values():
-            normalizedState[idx] = (state[idx] - self.statsPerTerm[idx][0]) / float(self.statsPerTerm[idx][1])
+            normalizedState[idx] = (state[idx] - self.statsPerTerm[idx][0]) / float(self.statsPerTerm[idx][1] - self.statsPerTerm[idx][0])
         return normalizedState
+
+    # '''
+    # Returns the z-score normalized vector of the state
+    # '''
+    # def normalize(self, state):
+    #     normalizedState = np.zeros(state.size, dtype=np.float64)
+    #     for (idx, objects) in self.stateTerms.values():
+    #         normalizedState[idx] = (state[idx] - self.statsPerTerm[idx][0]) / float(self.statsPerTerm[idx][1])
+    #     return normalizedState
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
@@ -410,7 +420,7 @@ class EnvironmentNorm:
     '''
     Returns the index at self.allActionsKeys of the 'legal' action selected at random from all possible actions
     '''
-    def sample(self):
+    def sample(self, reduceactionspace=False):
         try:
             return np.random.choice(self.legalActionsPerState[tuple(self.state)], 1)[0]
         except KeyError:

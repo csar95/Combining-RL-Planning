@@ -10,9 +10,9 @@ PROBLEM = "elevators_p5"
 REPLAY_MEMORY_SIZE = 20_000  # 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000  # Minimum number of steps to start training
 MINIBATCH_SIZE = 64  # The number of samples we use for training
-UPDATE_TARGET_EVERY = 100
 HARD_UPDATE = False  # True --> Hard update | False --> Soft update
-TAU = 0.01
+UPDATE_TARGET_EVERY = 500
+TAU = 0.005
 DISCOUNT = 0.99
 LEARNING_RATE = 0.001
 
@@ -28,7 +28,7 @@ SHOW_STATS_EVERY = 25  # (Episodes)
 
 NUMBER_OF_PREVIOUS_PLANS = 53
 REUSE_RATE = 0.25
-REDUCE_ACTION_SPACE = True   # False --> Alg. uses full action space
+REDUCE_ACTION_SPACE = False  # False --> Alg. uses full action space
                              # True --> Alg. filters legal actions with the ones appearing on the prior plans whenever it's possible, otherwise it uses the full action space
 
 MAX_STEPS_PLANNER = 40
