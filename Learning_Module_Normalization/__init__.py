@@ -7,7 +7,7 @@ import time
 
 if __name__ == '__main__':
     folder = "DDQL_Norm (Z-score)"
-    idx = 0
+    idx = 3
 
     env = EnvironmentNorm()
     agent = DDQNAgentNorm(env)
@@ -19,6 +19,6 @@ if __name__ == '__main__':
     exp_results.save_data(folder, idx)
     # exp_results.plot_results()
 
-    planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder}/{PROBLEM}-{idx}.h5", reduceactionspace=REDUCE_ACTION_SPACE)
-    solution, score, finished = planner.get_plan()
+    planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder}/{PROBLEM}-{idx}.h5")
+    solution, score, finished = get_plan_norm(env, agent)
     planner.save_plan(solution, pathtodata=f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}")

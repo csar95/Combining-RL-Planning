@@ -67,8 +67,10 @@ class Metrics:
         write_data(self.scores, pathtodata, "scores")
         write_data(self.lengths, pathtodata, "lengths")
         write_data(self.durations, pathtodata, "durations")
-        write_data(self.avgLoss, pathtodata, "avgLoss")
-        write_data(self.avgFScore, pathtodata, "avgFScore")
+        if len(self.avgLoss) > 0:
+            write_data(self.avgLoss, pathtodata, "avgLoss")
+        if len(self.avgFScore) > 0:
+            write_data(self.avgFScore, pathtodata, "avgFScore")
 
     def plot_results(self, plot_avg_loss_fscore=True):
         episodes, avg_scores, avg_lengths, avg_durations, avg_loss, avg_fscore = self.get_average_data_to_plot()

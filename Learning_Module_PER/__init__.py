@@ -15,7 +15,7 @@ if __name__ == '__main__':
     exp_results = deep_q_learning_alg_per(env, agent)
     colorPrint(str(time.time() - start_time), YELLOW)
 
-    solution, score, finished = get_plan(env, agent)
+    solution, score, finished = get_plan_per(env, agent)
 
     print(f"Length of solution: {len(solution)} | Score: {score} | Done: {finished}")
     print(solution)

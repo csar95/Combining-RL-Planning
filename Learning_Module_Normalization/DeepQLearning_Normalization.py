@@ -69,14 +69,6 @@ def deep_q_learning_alg_norm(env, agent, idx, folder):
             average_reward, average_length, average_duration, average_loss, average_fscore = exp_results.get_average_data(SHOW_STATS_EVERY)
             print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. F-score: {average_fscore} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
 
-        # Save model, but only when min reward is greater or equal a set value
-            # if average_reward >= GOAL_REWARD:
-            #     # Create models folder
-            #     if not os.path.isdir('models'):
-            #         os.makedirs('models')
-            #     agent.model.save(f'models/{MODEL_NAME}__{average_reward}avg__{int(time.time())}.model')
-            #     break
-
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
@@ -88,3 +80,29 @@ def deep_q_learning_alg_norm(env, agent, idx, folder):
     agent.model.save_weights(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
 
     return exp_results
+
+def get_plan_norm(env, agent, reduceactionspace=False):
+    plan = []
+
+    episode_reward = 0
+    step = 0
+    done = False
+    current_state = env.reset()
+
+    while not done and step < MAX_STEPS_PLANNER:
+        normalized_current_state = env.normalize(current_state)
+        # Take actions greedily
+        actionsQValues = agent.get_qs(normalized_current_state)
+        legalActionsIds = env.get_legal_actions(current_state, reduceactionspace)
+        # Make the argmax selection among the legal actions
+        action = legalActionsIds[np.argmax(actionsQValues[legalActionsIds])]
+
+        plan.append(env.allActionsKeys[action])
+        new_state, reward, done = env.step(action)
+
+        episode_reward += reward
+
+        current_state = new_state
+        step += 1
+
+    return plan, episode_reward, done

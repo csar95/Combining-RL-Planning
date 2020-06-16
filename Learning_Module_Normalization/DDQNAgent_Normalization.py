@@ -38,7 +38,7 @@ class DDQNAgentNorm:
         model.add(Dense(units=self.env.allActionsKeys.size,
                         activation="linear"))
 
-        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=[Recall(), Precision()])
+        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=[Recall(name="recall"), Precision(name="precision")])
 
         return model
 
@@ -94,7 +94,7 @@ class DDQNAgentNorm:
         elif not HARD_UPDATE:
             self.soft_update_target_model()
 
-        return history['loss'][0], history['recall_1'][0], history['precision_1'][0]
+        return history['loss'][0], history['recall'][0], history['precision'][0]
 
     def hard_update_target_model(self):
         self.targetModel.set_weights(self.model.get_weights())

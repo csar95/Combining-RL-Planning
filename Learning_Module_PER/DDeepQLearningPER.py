@@ -73,3 +73,28 @@ def deep_q_learning_alg_per(env, agent, idx, folder):
     agent.model.save_weights(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
 
     return exp_results
+
+def get_plan_per(env, agent):
+    plan = []
+
+    episode_reward = 0
+    step = 0
+    done = False
+    current_state = env.reset()
+
+    while not done and step < MAX_STEPS_PLANNER:
+        # Take actions greedily
+        actionsQValues = agent.get_qs(current_state)
+        legalActionsIds = env.get_legal_actions(current_state)
+        # Make the argmax selection among the legal actions
+        action = legalActionsIds[np.argmax(actionsQValues[legalActionsIds])]
+
+        plan.append(env.allActionsKeys[action])
+        new_state, reward, done = env.step(action)
+
+        episode_reward += reward
+
+        current_state = new_state
+        step += 1
+
+    return plan, episode_reward, done
