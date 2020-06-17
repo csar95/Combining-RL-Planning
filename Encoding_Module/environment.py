@@ -276,15 +276,15 @@ class Environment:
     Generates and returns a list transitions corresponding to the sequence of actions from all previous solutions that
     we are taking into consideration
     '''
-    def get_previous_plans(self, numsol, reduceactionspace=False):
+    def get_previous_plans(self, reduceactionspace=False):
         path = RESOURCES_FOLDER + "Solutions/" + PROBLEM
 
         if reduceactionspace:
-            reducedAllActionsKeys = get_reduce_action_space(path, numsol)
+            reducedAllActionsKeys = get_reduce_action_space(path)
             reducedAllActionsIdx = [np.where(self.allActionsKeys == key)[0][0] for key in reducedAllActionsKeys]
             self.reducedAllActionsIdx = np.array(reducedAllActionsIdx)
 
-        return get_prior_transitions(path, numsol, self)
+        return get_prior_transitions(path, self)
 
     def show_state(self, state):
         for pred, idx in self.stateTerms.items():

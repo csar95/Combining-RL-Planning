@@ -1,7 +1,10 @@
+from utils import *
+
 import re
 import sys
+from os import listdir
+from os.path import join
 
-from utils import *
 
 '''
 It does not accept a domain with or, when, forall statements. Only not is allowed
@@ -279,12 +282,11 @@ def get_reward_value(aux, idx, i):
 '''
 Transforms the prior plans from the same domain into transition tuples that will be stored in the replay buffer
 '''
-def get_prior_transitions(path, numsol, env):
+def get_prior_transitions(path, env):
     transitions = []
 
-    for file in list(map(str, range(numsol))):
-        filePath = path + f"/{file}.1"
-        f = open(filePath, 'r')
+    for file in listdir(path):
+        f = open(join(path, file), 'r')
         steps = f.readlines()
 
         current_state = env.reset()
@@ -305,12 +307,11 @@ def get_prior_transitions(path, numsol, env):
 '''
 Returns a reduced version of the current state that only includes the actions listed in the prior plans
 '''
-def get_reduce_action_space(path, numsol):
+def get_reduce_action_space(path):
     reducedAllActionsKeys = np.array([])
 
-    for file in list(map(str, range(numsol))):
-        filePath = path + f"/{file}.1"
-        f = open(filePath, 'r')
+    for file in listdir(path):
+        f = open(join(path, file), 'r')
         steps = f.readlines()
 
         for action in steps:

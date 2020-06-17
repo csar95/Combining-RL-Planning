@@ -12,7 +12,7 @@ MIN_REPLAY_MEMORY_SIZE = 1_000  # Minimum number of steps to start training
 MINIBATCH_SIZE = 64  # The number of samples we use for training
 HARD_UPDATE = False  # True --> Hard update | False --> Soft update
 UPDATE_TARGET_EVERY = 500
-TAU = 0.005
+TAU = 0.01
 DISCOUNT = 0.99
 LEARNING_RATE = 0.001
 
@@ -26,8 +26,13 @@ MIN_EPSILON = 0.0001
 
 SHOW_STATS_EVERY = 25  # (Episodes)
 
-NUMBER_OF_PREVIOUS_PLANS = 53
+# Plan reuse settings
 REUSE_RATE = 0.25
+
+INITIAL_ETA = 0     # 0 ==> REDUCE_ACTION_SPACE = False (Always)
+ETA_DECAY = 1       # 1 + (INITIAL_ETA = 1) ==> REDUCE_ACTION_SPACE = True (Always)
+MIN_ETA = 0.01
+
 REDUCE_ACTION_SPACE = False  # False --> Alg. uses full action space
                              # True --> Alg. filters legal actions with the ones appearing on the prior plans whenever it's possible, otherwise it uses the full action space
 

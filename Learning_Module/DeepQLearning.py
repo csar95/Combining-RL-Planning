@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 
-def deep_q_learning_alg(env, agent, idx, folder, reduceactionspace=False):
+def deep_q_learning_alg(env, agent, idx, folder):
     np_argmax = np.argmax
     np_random_number = np.random.random
 
@@ -19,6 +19,7 @@ def deep_q_learning_alg(env, agent, idx, folder, reduceactionspace=False):
     env_get_legal_actions = env.get_legal_actions
 
     epsilon = 1  # Going to be decayed
+    eta = INITIAL_ETA
     exp_results = Metrics()
 
     for episode in range(1, EPISODES+1):
@@ -35,11 +36,11 @@ def deep_q_learning_alg(env, agent, idx, folder, reduceactionspace=False):
         while not done and step < MAX_STEP_PER_EPISODE:
             if np_random_number() > epsilon:  # Take legal action greedily (Exploitation)
                 actionsQValues = agent_get_qs(current_state)
-                legalActionsIds = env_get_legal_actions(current_state, reduceactionspace)
+                legalActionsIds = env_get_legal_actions(current_state, reduceactionspace=(np_random_number() < eta))
                 # Make the argmax selection among the legal actions
                 action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
             else:  # Take random legal action (Exploration)
-                action = env_sample(reduceactionspace)
+                action = env_sample(reduceactionspace=(np_random_number() < eta))
 
             new_state, reward, done = env_step(action)
 
@@ -70,6 +71,10 @@ def deep_q_learning_alg(env, agent, idx, folder, reduceactionspace=False):
         # Decay epsilon
         if epsilon > MIN_EPSILON:
             epsilon *= EPSILON_DECAY
+
+        # Decay eta
+        if eta > MIN_ETA:
+            eta *= ETA_DECAY
 
     # Create models folder
     pathtomodel = f"{MODELS_FOLDER}{PROBLEM}/{folder}"
