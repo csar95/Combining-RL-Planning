@@ -1,11 +1,11 @@
+from Encoding_Module.fileIO import *
+from hyperparameters import *
+
 import re
 import numpy as np
 import itertools
 import fast
 from copy import deepcopy
-
-from fileIO import *
-from hyperparameters import *
 
 
 class Environment:
@@ -237,7 +237,7 @@ class Environment:
     '''
     def get_legal_actions(self, state, reduceactionspace=False):
         try:
-            return self.legalActionsPerState[tuple(state)]
+            return self.legalActionsPerState[tuple(state)][reduceactionspace]
         except KeyError:
             legalActions = np.array(fast.get_legal_actions(state, self.allActions, self.allActionsKeys))
 
@@ -245,8 +245,11 @@ class Environment:
                 reducedLegalActions = np.intersect1d(self.reducedAllActionsIdx, legalActions)
                 legalActions = reducedLegalActions if reducedLegalActions.size > 0 else legalActions
 
-            self.legalActionsPerState[tuple(state)] = legalActions
-            return self.legalActionsPerState[tuple(state)]
+            if tuple(state) not in self.legalActionsPerState:
+                self.legalActionsPerState[tuple(state)] = {}
+
+            self.legalActionsPerState[tuple(state)][reduceactionspace] = legalActions
+            return self.legalActionsPerState[tuple(state)][reduceactionspace]
 
     '''
     Returns whether the current state satisfies the goal state or not
@@ -314,7 +317,7 @@ class Environment:
     '''
     def sample(self, reduceactionspace=False):
         try:
-            return np.random.choice(self.legalActionsPerState[tuple(self.state)], 1)[0]
+            return np.random.choice(self.legalActionsPerState[tuple(self.state)][reduceactionspace], 1)[0]
         except KeyError:
             if reduceactionspace:
                 return np.random.choice(self.get_legal_actions(self.state, reduceactionspace), 1)[0]

@@ -1,5 +1,6 @@
 from metrics import *
 from hyperparameters import *
+
 import time
 import numpy as np
 import os
@@ -34,13 +35,15 @@ def deep_q_learning_alg(env, agent, idx, folder):
         start_time = time.time()
 
         while not done and step < MAX_STEP_PER_EPISODE:
+            reduceactionspace = np_random_number() < eta  # True ==> Use simplified actions space | False ==> Use full action space
+
             if np_random_number() > epsilon:  # Take legal action greedily (Exploitation)
                 actionsQValues = agent_get_qs(current_state)
-                legalActionsIds = env_get_legal_actions(current_state, reduceactionspace=(np_random_number() < eta))
+                legalActionsIds = env_get_legal_actions(current_state, reduceactionspace)
                 # Make the argmax selection among the legal actions
                 action = legalActionsIds[np_argmax(actionsQValues[legalActionsIds])]
             else:  # Take random legal action (Exploration)
-                action = env_sample(reduceactionspace=(np_random_number() < eta))
+                action = env_sample(reduceactionspace)
 
             new_state, reward, done = env_step(action)
 
@@ -48,7 +51,7 @@ def deep_q_learning_alg(env, agent, idx, folder):
 
             agent_update_replay_memory((current_state, action, reward, new_state, done))
 
-            loss, recall, precision = agent_train()
+            loss, recall, precision = agent_train(reduceactionspace)
 
             if loss != -1:
                 ep_loss.append(loss)
@@ -66,7 +69,7 @@ def deep_q_learning_alg(env, agent, idx, folder):
 
         if episode % SHOW_STATS_EVERY == 0:
             average_reward, average_length, average_duration, average_loss, average_fscore = exp_results.get_average_data(SHOW_STATS_EVERY)
-            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. F-score: {average_fscore} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon}")
+            print(f"Episode {episode} --> Score: {int(episode_reward)} | Avg. Score: {int(average_reward)} | Avg. Loss: {average_loss} | Avg. F-score: {average_fscore} | Avg. duration: {average_duration} | Avg. length: {int(average_length)} | Epsilon: {epsilon} | Eta: {eta}")
 
         # Decay epsilon
         if epsilon > MIN_EPSILON:

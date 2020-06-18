@@ -19,7 +19,7 @@ valid = {
     "n": False
 }
 
-colors_graph = ["firebrick", "forestgreen", "dodgerblue", "darkorchid"]
+colors_graph = ["firebrick", "dodgerblue", "darkorchid", "forestgreen"]
 
 def colorPrint(msg, color):
     print(color + msg + RESET)

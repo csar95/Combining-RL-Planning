@@ -151,8 +151,9 @@ class Metrics:
 
         # EPISODES F-SCORE ------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(plt, title='Episode average F-score over time', xlabel='Episode', ylabel='Average episode F-score',
-                              xdata_set=episodes_set, ydata_set=avg_fscore_set, labels=labels,
-                              filename=f"{pathtofigures}Episodes_Avg_F-score.png", separators=separators,
-                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[0,1])
+        if avg_fscore_set:
+            save_comparison_graph(plt, title='Episode average F-score over time', xlabel='Episode', ylabel='Average episode F-score',
+                                  xdata_set=episodes_set, ydata_set=avg_fscore_set, labels=labels,
+                                  filename=f"{pathtofigures}Episodes_Avg_F-score.png", separators=separators,
+                                  xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[0,1])
 
