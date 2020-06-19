@@ -43,15 +43,18 @@ class EnvironmentNorm:
 
         # Add the independent predicates to the state
         for pred in self.objIndependentPreds:
-            self.stateTerms[pred] = (len(self.stateTerms), [0,1])
+            if '?' in pred:  # Predicates with only one parameter
+                self.form_independent_state_elements(pred)
+            else:
+                self.stateTerms[pred] = (len(self.stateTerms), [0,1])
 
         self.state = np.zeros(len(self.stateTerms), dtype=np.int64)
 
         self.statsPerTerm = {}
         for (idx, objects) in self.stateTerms.values():
             lAux = list(range( len(objects) ))
-            self.statsPerTerm[idx] = (min(lAux), max(lAux))
-            # self.statsPerTerm[idx] = (mean(lAux), stdev(lAux))
+            # self.statsPerTerm[idx] = (min(lAux), max(lAux))
+            self.statsPerTerm[idx] = (mean(lAux), stdev(lAux))
 
         # This will be useful to form the Q-table (COLUMNS -> Actions in the env., ROWS -> States)
         colorPrint("\nFinding all possible actions in this environment...", MAGENTA)
@@ -67,6 +70,32 @@ class EnvironmentNorm:
         self.reset()
 
         colorPrint("\nEnvironment is ready", MAGENTA)
+
+    '''
+    Adds independent predicates with every object of the parameter's type to the environment state
+    '''
+    def form_independent_state_elements(self, predicate):
+        predicate = predicate.split()
+        name = predicate[0]
+
+        # Create list with the type of each object in the predicate
+
+        objectTypes = []
+        for idx, elem in enumerate(predicate):
+            if "?" in elem:  # Elem is an object --> Check the type
+                for i, x in enumerate(predicate[(idx + 1):]):
+                    if x == "-":
+                        objectTypes.append(predicate[idx + 1 + (i + 1)])
+                        break
+
+        # Get all objects of each type of object in the predicate parameters
+        poolOfObjects = self.get_pool_of_objects(objectTypes)
+
+        # Add all combinations of the objects that a predicate can have to the state dictionary (state encoding)
+        for tup in list(itertools.product(*poolOfObjects)):
+            objs = ""
+            for elem in tup: objs += (" " + elem)
+            self.stateTerms[f"({name}{objs})"] = (len(self.stateTerms), [0,1])  # Add each term to the dictionary with its position in the array
 
     '''
     Adds all forms of the current predicate to the environment state
@@ -202,7 +231,7 @@ class EnvironmentNorm:
                     precondition = pattern.sub(lambda m: translation[re.escape(m.group(0))], pred.lstrip('!'))
                     preconditionAux = re.sub('[()]', '', precondition).split()
 
-                    if len(preconditionAux) > 1:
+                    if precondition not in self.stateTerms.keys():
                         variableObj = preconditionAux.pop(-1)
 
                         if tuple(preconditionAux) not in self.stateTerms.keys() and \
@@ -223,20 +252,8 @@ class EnvironmentNorm:
 
                             if targetValue == 1:
                                 preconditions[idx] = objects.index(variableObj)
-
                     else:
-                        if preconditionAux[0] not in self.stateTerms.keys() and \
-                                ((targetValue == 1 and precondition not in self.immutableProps) or
-                                 (targetValue == 0 and precondition in self.immutableProps)):
-                            # The precondition predicate of the current action is:
-                            # - Not present in the state keys AND
-                            # - It is supposed to be True but is not in the immutableProps set OR It is supposed to be False but is in the immutableProps set
-                            newActionIsValid = False
-                            break
-
-                        # Save the position of the predicate
-                        if preconditionAux[0] in self.stateTerms.keys():
-                            preconditions[ self.stateTerms[preconditionAux[0]][0] ] = targetValue
+                        preconditions[ self.stateTerms[precondition][0] ] = targetValue
 
                 if not newActionIsValid:
                     continue
@@ -251,7 +268,7 @@ class EnvironmentNorm:
                     effect = pattern.sub(lambda m: translation[re.escape(m.group(0))], eff.lstrip('!'))
                     effectAux = re.sub('[()]', '', effect).split()
 
-                    if len(effectAux) > 1:
+                    if effect not in self.stateTerms.keys():
                         variableObj = effectAux.pop(-1)
 
                         if tuple(effectAux) not in self.stateTerms.keys():
@@ -267,15 +284,8 @@ class EnvironmentNorm:
 
                         elif targetValue == 1:
                             effects[idx] = objects.index(variableObj)
-
                     else:
-                        if effectAux[0] not in self.stateTerms.keys():
-                            # The effect predicate of the current action is not present in the state keys
-                            # The immutableProps are not taken into account here because they cannot appear in any action effects
-                            newActionIsValid = False
-                            break
-
-                        effects[self.stateTerms[effectAux[0]][0]] = targetValue
+                        effects[self.stateTerms[effect][0]] = targetValue
 
                 if not newActionIsValid:
                     continue
@@ -353,17 +363,16 @@ class EnvironmentNorm:
 
         for pred in self.goal_state:
             targetValue = 0 if pred[0] == '!' else 1
-
-            pred = re.sub('[()]', '', pred.lstrip('!')).split()
-            if len(pred) > 1:
-                variableObj = pred.pop(-1)
-                (idx, objects) = self.stateTerms[tuple(pred)]
+            predAux = re.sub('[()]', '', pred.lstrip('!')).split()
+            if pred not in self.stateTerms.keys():
+                variableObj = predAux.pop(-1)
+                (idx, objects) = self.stateTerms[tuple(predAux)]
 
                 if (targetValue == 1 and self.state[idx] == objects.index(variableObj)) or \
                         (targetValue == 0 and self.state[idx] == objects.index(-1)):
                     pendingPreds -= 1
 
-            elif self.state[ self.stateTerms[pred[0]][0] ] == targetValue:
+            elif self.state[ self.stateTerms[pred][0] ] == targetValue:
                 pendingPreds -= 1
 
         return pendingPreds
@@ -379,23 +388,23 @@ class EnvironmentNorm:
 
         return reward + (gain * (GOAL_REWARD / len(self.goal_state)))
 
-    '''
-    Returns the min-max normalized vector of the state
-    '''
-    def normalize(self, state):
-        normalizedState = np.zeros(state.size, dtype=np.float64)
-        for (idx, objects) in self.stateTerms.values():
-            normalizedState[idx] = (state[idx] - self.statsPerTerm[idx][0]) / float(self.statsPerTerm[idx][1] - self.statsPerTerm[idx][0])
-        return normalizedState
-
     # '''
-    # Returns the z-score normalized vector of the state
+    # Returns the min-max normalized vector of the state
     # '''
     # def normalize(self, state):
     #     normalizedState = np.zeros(state.size, dtype=np.float64)
     #     for (idx, objects) in self.stateTerms.values():
-    #         normalizedState[idx] = (state[idx] - self.statsPerTerm[idx][0]) / float(self.statsPerTerm[idx][1])
+    #         normalizedState[idx] = (state[idx] - self.statsPerTerm[idx][0]) / float(self.statsPerTerm[idx][1] - self.statsPerTerm[idx][0])
     #     return normalizedState
+
+    '''
+    Returns the z-score normalized vector of the state
+    '''
+    def normalize(self, state):
+        normalizedState = np.zeros(state.size, dtype=np.float64)
+        for (idx, objects) in self.stateTerms.values():
+            normalizedState[idx] = (state[idx] - self.statsPerTerm[idx][0]) / float(self.statsPerTerm[idx][1])
+        return normalizedState
 
 # -------------------------------------------------------------------------------------------------------------------- #
 
@@ -408,12 +417,12 @@ class EnvironmentNorm:
 
         for prop in self.init_state:
             propTemp = prop.strip().split()
-            if len(propTemp) > 1:
+            if f"({prop})" not in self.stateTerms.keys():
                 variableObj = propTemp.pop(-1)
                 (idx, objects) = self.stateTerms[ tuple(propTemp) ]
                 self.state[idx] = objects.index(variableObj)
             else:
-                self.state[ self.stateTerms[propTemp[0]][0] ] = 1
+                self.state[ self.stateTerms[f"({prop})"][0] ] = 1
 
         return self.state.copy()
 

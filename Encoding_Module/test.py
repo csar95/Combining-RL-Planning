@@ -3,7 +3,7 @@ import time
 
 
 def run_test():
-    colorPrint("\n------- TYPES -------", CYAN)
+    colorPrint("\n------- OBJECTS & TYPES -------", CYAN)
     print(env.types)
 
     colorPrint("\n------- ACTIONS -------", CYAN)
@@ -30,9 +30,6 @@ def run_test():
     colorPrint("\n------- IMMUTABLE PROPERTIES -------", CYAN)
     print(env.immutableProps)
 
-    colorPrint("\n------- OBJECTS & TYPES -------", CYAN)
-    print(env.types)
-
     colorPrint("\n------- INIT STATE -------", CYAN)
     print(env.init_state)
 
@@ -55,7 +52,7 @@ def run_test():
     colorPrint("\n------- ALL ACTIONS IN THE ENVIRONMENT -------", CYAN)
     # print(env.allActions["(move-up-slow slow0-0 n2 n8)"])
     # print("(move-up-slow slow0-0 n16 n16)" in env.allActions)
-    # print(env.allActions)
+    print(env.allActions)
     print(len(env.allActions))
 
     # ------------------------------------------------------------------------ #

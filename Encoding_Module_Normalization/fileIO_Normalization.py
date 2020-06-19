@@ -73,8 +73,10 @@ def read_domain_file(filePath, env):
                         answered = True
 
                         if not valid[answer]:
-                            env.objDependentPreds.add(re.sub("[()]", "", line.strip()).strip())
-
+                            if line.count('?') == 1:
+                                env.objIndependentPreds.add(re.sub("[()]", "", line.strip()).strip())
+                            else:
+                                env.objDependentPreds.add(re.sub("[()]", "", line.strip()).strip())
                         else:
                             env.immutablePreds.add(re.sub("[()]", "", line.strip()).strip())
 

@@ -11,10 +11,10 @@ import time
 
 
 if __name__ == '__main__':
-    folder = "DDQL_PR_6"
+    folder = "DoubleDQL_Hard-Update (100)"
 
     env = Environment()
-    env.get_previous_plans(reduceactionspace=True)  # True ==> 3rd & 6th approaches
+    # env.get_previous_plans(reduceactionspace=True)  # True ==> 3rd & 6th approaches
 
     for idx in range(3):
 

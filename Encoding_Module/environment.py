@@ -69,7 +69,7 @@ class Environment:
     Adds all forms of the current predicate to the environment state
     '''
     def form_state_elements(self, predicate):
-        predicate = list(filter(lambda elm: elm != '', predicate.split(" ")))
+        predicate = predicate.split()
         name = predicate[0]
 
         # Create list with the type of each object in the predicate

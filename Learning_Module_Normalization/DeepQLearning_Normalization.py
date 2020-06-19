@@ -1,5 +1,6 @@
-from hyperparameters import *
 from metrics import *
+from hyperparameters import *
+
 import time
 import numpy as np
 import os
@@ -51,6 +52,7 @@ def deep_q_learning_alg_norm(env, agent, idx, folder):
             agent_update_replay_memory((normalized_current_state, action, reward, env_normalize(new_state), new_state, done))
 
             loss, recall, precision = agent_train()
+
             if loss != -1:
                 ep_loss.append(loss)
                 ep_fscore.append(2 * ((precision * recall) / (precision + recall)))

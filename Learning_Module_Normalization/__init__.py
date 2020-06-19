@@ -6,19 +6,47 @@ import time
 
 
 if __name__ == '__main__':
-    folder = "DDQL_Norm (Z-score)"
-    idx = 3
+    folder1 = "DDQL_2ndEncoding (Min-Max norm.)"
+    folder2 = "DDQL_2ndEncoding (NO norm.)"
+    # folder3 = "DDQL_2ndEncoding (Z-score norm.)"
 
     env = EnvironmentNorm()
-    agent = DDQNAgentNorm(env)
 
-    start_time = time.time()
-    exp_results = deep_q_learning_alg_norm(env, agent, idx, folder)
-    colorPrint(str(time.time() - start_time), YELLOW)
+    for idx in range(99,100):
+        agent = DDQNAgentNorm(env)
 
-    exp_results.save_data(folder, idx)
-    # exp_results.plot_results()
+        start_time = time.time()
+        exp_results = deep_q_learning_alg_norm(env, agent, idx, folder1)
+        colorPrint(str(time.time() - start_time), YELLOW)
 
-    planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder}/{PROBLEM}-{idx}.h5")
-    solution, score, finished = get_plan_norm(env, agent)
-    planner.save_plan(solution, pathtodata=f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}")
+        exp_results.save_data(folder1, idx)
+
+        planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder1}/{PROBLEM}-{idx}.h5")
+        solution, score, finished = get_plan_norm(env, agent)
+        planner.save_plan(solution, pathtodata=f"{DATA_FOLDER}{PROBLEM}/{folder1}/{idx}")
+
+    # for idx in range(3):
+    #     agent = DDQNAgentNorm(env)
+    #
+    #     start_time = time.time()
+    #     exp_results = deep_q_learning_alg_norm(env, agent, idx, folder2)
+    #     colorPrint(str(time.time() - start_time), YELLOW)
+    #
+    #     exp_results.save_data(folder2, idx)
+    #
+    #     planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder2}/{PROBLEM}-{idx}.h5")
+    #     solution, score, finished = get_plan_norm(env, agent)
+    #     planner.save_plan(solution, pathtodata=f"{DATA_FOLDER}{PROBLEM}/{folder2}/{idx}")
+
+    # for idx in range(3):
+    #     agent = DDQNAgentNorm(env)
+    #
+    #     start_time = time.time()
+    #     exp_results = deep_q_learning_alg_norm(env, agent, idx, folder3)
+    #     colorPrint(str(time.time() - start_time), YELLOW)
+    #
+    #     exp_results.save_data(folder3, idx)
+    #
+    #     planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder3}/{PROBLEM}-{idx}.h5")
+    #     solution, score, finished = get_plan_norm(env, agent)
+    #     planner.save_plan(solution, pathtodata=f"{DATA_FOLDER}{PROBLEM}/{folder3}/{idx}")

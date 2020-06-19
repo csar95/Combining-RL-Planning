@@ -1,7 +1,5 @@
-import time
-import numpy as np
-import subprocess
 from environment_Normalization import *
+import time
 
 
 def run_test():
@@ -97,5 +95,5 @@ def run_test():
 
 
 if __name__ == '__main__':
-    env = Environment()
+    env = EnvironmentNorm()
     run_test()
