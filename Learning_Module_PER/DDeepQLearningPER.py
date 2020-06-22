@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 
-def deep_q_learning_alg_per(env, agent, idx, folder):
+def deep_q_learning_alg_per(env, agent, idx, folder, a=0.7):
     np_argmax = np.argmax
     np_random_number = np.random.random
 
@@ -45,7 +45,7 @@ def deep_q_learning_alg_per(env, agent, idx, folder):
 
             agent_update_replay_memory((current_state, action, reward, new_state, done))
 
-            loss = agent_train(epsilon, a=0.7)
+            loss = agent_train(epsilon, a)
             if loss != -1:
                 ep_loss.append(loss)
 
