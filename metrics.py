@@ -72,88 +72,45 @@ class Metrics:
         if len(self.avgFScore) > 0:
             write_data(self.avgFScore, pathtodata, "avgFScore")
 
-    def plot_results(self, plot_avg_loss_fscore=True):
-        episodes, avg_scores, avg_lengths, avg_durations, avg_loss, avg_fscore = self.get_average_data_to_plot()
-
-        plt.figure(figsize=(8, 6))
-
-        # LEARNING CURVE --------------------------------------------------------------------------------------------- #
-
-        save_graph(plt, title='Episode reward over time', xlabel='Episode', ylabel='Average episode score',
-                   xbounds=[0, np.max(episodes)], xdata=episodes, ydata=avg_scores,
-                   filename=f"{FIGURES_FOLDER}Learning curve.png")
-
-        # EPISODES DURATION ------------------------------------------------------------------------------------------ #
-
-        save_graph(plt, title='Episode per time step', xlabel='Time step', ylabel='Episode',
-                   xbounds=[0, np.max(avg_durations)], xdata=avg_durations, ydata=episodes,
-                   filename=f"{FIGURES_FOLDER}Episodes duration.png")
-
-        # EPISODES LENGTH -------------------------------------------------------------------------------------------- #
-
-        save_graph(plt, title='Episode length over time', xlabel='Episode', ylabel='Average episode length',
-                   xbounds=[0, np.max(episodes)], xdata=episodes, ydata=avg_lengths,
-                   filename=f"{FIGURES_FOLDER}Episodes length.png")
-
-        # EPISODES LOSS ---------------------------------------------------------------------------------------------- #
-
-        save_graph(plt, title='Episode average loss over time', xlabel='Episode', ylabel='Average episode loss',
-                   xbounds=[0, np.max(episodes)],
-                   xdata=episodes if plot_avg_loss_fscore else np.arange(np.max(episodes) - len(self.avgLoss), np.max(episodes)),
-                   ydata=avg_loss if plot_avg_loss_fscore else self.avgLoss,
-                   filename=f"{FIGURES_FOLDER}Episodes loss.png", logscale=True)
-
-        # EPISODES F-SCORE ------------------------------------------------------------------------------------------- #
-
-        save_graph(plt, title='Episode average F-score over time', xlabel='Episode', ylabel='Average episode F-score',
-                   xbounds=[0, np.max(episodes)], ybounds=[0,1],
-                   xdata=episodes if plot_avg_loss_fscore else np.arange(np.max(episodes) - len(self.avgFScore), np.max(episodes)),
-                   ydata=avg_fscore if plot_avg_loss_fscore else self.avgFScore,
-                   filename=f"{FIGURES_FOLDER}Episodes F-score.png")
-
     @staticmethod
-    def plot_results_for_comparison(comparison_folder, labels, episodes_set, avg_scores_set, avg_lengths_set, durations_set, avg_loss_set, avg_fscore_set, separators):
-        pathtofigures = f"{FIGURES_FOLDER}{PROBLEM}/{comparison_folder}/"
+    def plot_results_for_comparison(figure_name, labels, episodes_set, avg_scores_set, avg_lengths_set, durations_set, avg_loss_set, separators):
+        pathtofigures = f"{FIGURES_FOLDER}{PROBLEM}/"
         if not os.path.isdir(pathtofigures):
             os.makedirs(pathtofigures)
 
-        plt.figure(figsize=(8, 6))
+        fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16,11))
+        plt.subplots_adjust(top=0.95, bottom=0.09, left=0.065, right=0.97, wspace=0.15, hspace=0.13)
 
         # LEARNING CURVE --------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(plt, title='Episode reward over time', xlabel='Episode', ylabel='Episode score',
-                              xdata_set=episodes_set, ydata_set=avg_scores_set, labels=labels,
-                              filename=f"{pathtofigures}Learning_Curve.png", separators=separators,
-                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])])
+        save_comparison_graph(axs, 0, 0, title='Episode reward over time', ylabel='Reward',
+                              xdata_set=episodes_set, ydata_set=avg_scores_set, separators=separators,
+                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[-750, 1250])
 
         # EPISODES LENGTH -------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(plt, title='Episode length over time', xlabel='Episode', ylabel='Episode length',
-                              xdata_set=episodes_set, ydata_set=avg_lengths_set, labels=labels,
-                              filename=f"{pathtofigures}Episodes_Length.png", separators=separators,
-                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], legendloc='upper right')
-
-        # EPISODES DURATION ------------------------------------------------------------------------------------------ #
-
-        save_comparison_graph(plt, title='Computational time', xlabel='Episode', ylabel='Time (s)',
-                              xdata_set=episodes_set, ydata_set=durations_set, labels=labels,
-                              separators=separators, filename=f"{pathtofigures}Episodes_Duration.png",
-                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
-                              ybounds=[0, max([np.max(durations) for durations in durations_set])])
+        save_comparison_graph(axs, 0, 1, title='Episode length over time', ylabel='Solution length',
+                              xdata_set=episodes_set, ydata_set=avg_lengths_set, separators=separators,
+                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[10, 100])  # [20, 160])
 
         # EPISODES LOSS ---------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(plt, title='Episode average loss over time', xlabel='Episode', ylabel='Average episode loss',
-                              xdata_set=episodes_set, ydata_set=avg_loss_set, labels=labels,
-                              filename=f"{pathtofigures}Episodes_Avg_Loss.png", separators=separators,
+        save_comparison_graph(axs, 1, 0, title='Episode average loss over time', xlabel='Episode', ylabel='Average episode loss',
+                              xdata_set=episodes_set, ydata_set=avg_loss_set, separators=separators, logscale=True,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
-                              legendloc='upper right', logscale=True)
+                              ybounds=[min([np.min(loss) for loss in avg_loss_set]), max([np.max(loss) for loss in avg_loss_set])])
 
-        # EPISODES F-SCORE ------------------------------------------------------------------------------------------- #
+        # EPISODES DURATION ------------------------------------------------------------------------------------------ #
 
-        if avg_fscore_set:
-            save_comparison_graph(plt, title='Episode average F-score over time', xlabel='Episode', ylabel='Average episode F-score',
-                                  xdata_set=episodes_set, ydata_set=avg_fscore_set, labels=labels,
-                                  filename=f"{pathtofigures}Episodes_Avg_F-score.png", separators=separators,
-                                  xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[0,1])
+        save_comparison_graph(axs, 1, 1, title='Running time', xlabel='Episode', ylabel='Time (s)',
+                                xdata_set=episodes_set, ydata_set=durations_set, separators=separators,
+                                xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
+                                ybounds=[0, 1200])
 
+        # Set figure labels and legend
+        for i, sp in enumerate(separators):
+            axs[0,0].plot([], [], color=colors_graph[i], linewidth=2, label=labels[i])
+        fig.legend(loc="lower center", ncol=len(separators), edgecolor="black")
+
+        # Save image
+        plt.savefig(f"{pathtofigures}{figure_name}.png")

@@ -22,4 +22,3 @@ if __name__ == '__main__':
     print(solution)
 
     exp_results.save_data(folder, idx)
-    exp_results.plot_results()

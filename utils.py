@@ -19,59 +19,46 @@ valid = {
     "n": False
 }
 
-colors_graph = ["firebrick", "dodgerblue", "darkorchid", "forestgreen"]
+# colors_graph = ["firebrick", "dodgerblue", "darkorchid", "forestgreen"]
+# colors_graph = ["peru", "dimgrey"]
+# colors_graph = ["peru", "purple", "dimgrey"]
+colors_graph = ["peru", "purple", "dodgerblue", "dimgrey"]
 
 def colorPrint(msg, color):
     print(color + msg + RESET)
 
-def set_graph_parameters(plt, title, xlabel, ylabel, xbounds=None, ybounds=None, logscale=False):
+def set_graph_parameters(axs, x, y, title, xlabel, ylabel, xbounds=None, ybounds=None, logscale=False):
     if xbounds is not None:
-        plt.xlim(xbounds)
+        axs[x,y].set_xlim(xbounds)
     if ybounds is not None and not logscale:
-        plt.ylim(ybounds)
+        axs[x,y].set_ylim(ybounds)
 
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
+    if xlabel: axs[x,y].set_xlabel(xlabel)
+    else: axs[x,y].set_xticklabels(['','','','','','','','',''])
 
-def save_graph(plt, title, xlabel, ylabel, xdata, ydata, filename, xbounds=None, ybounds=None, logscale=False):
-    plt.clf()
-    set_graph_parameters(plt, title, xlabel, ylabel, xbounds, ybounds, logscale)
+    axs[x,y].set_ylabel(ylabel)
+    axs[x,y].set_title(title)
+    axs[x,y].yaxis.set_ticks_position('both')
 
-    if logscale:
-        plt.yscale('log')
-        plt.yticks(ticks=[0.1, 1, int(max(ydata))+1], labels=[0.1, 1, int(max(ydata))+1])
-
-    plt.plot(xdata, ydata, color='firebrick', linewidth=1.5)
-    plt.savefig(filename)
-
-    # from scipy import interpolate
-    #
-    # f = interpolate.make_interp_spline(episodes, avgScores)
-    # episodes_smooth = np.linspace(episodes.min(), episodes.max(), episodes.size * 2)
-    #
-    # plt.plot(episodes_smooth, f(episodes_smooth), color='firebrick', linewidth=1.5)
-
-def save_comparison_graph(plt, title, xlabel, ylabel, xdata_set, ydata_set, labels, filename, separators, xbounds=None, ybounds=None, legendloc='lower right', logscale=False):
-    plt.clf()
-    set_graph_parameters(plt, title, xlabel, ylabel, xbounds, ybounds, logscale)
+def save_comparison_graph(axs, x, y, title, xdata_set, ydata_set, separators, ylabel, xlabel=None, xbounds=None, ybounds=None, logscale=False):
+    set_graph_parameters(axs, x, y, title, xlabel, ylabel, xbounds, ybounds, logscale)
 
     if logscale:
-        plt.yscale('log')
-        plt.yticks(ticks=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1],
-                   labels=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
+        axs[x,y].set_yscale('log')
+        axs[x,y].set_yticks(ticks=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
+        axs[x,y].set_yticklabels(labels=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
 
     for i, sp in enumerate(separators):
-        mean_data, min_data, max_data = calculate_mean_min_max(ydata_set, separators[i-1] if i > 0 else 0, sp)
+        # mean_data, min_data, max_data = calculate_mean_min_max(ydata_set, separators[i-1] if i > 0 else 0, sp)
+        mean_data, st_quartile, rd_quartile = calculate_interquartile_range(ydata_set, separators[i - 1] if i > 0 else 0, sp)
 
         color = colors_graph[i]
-        plt.plot(xdata_set[0], mean_data, color=color, linewidth=.8)
-        plt.fill_between(xdata_set[0], min_data, max_data, alpha=.3, facecolor=color)
+        axs[x,y].plot(xdata_set[0], mean_data, color=color, linewidth=1.2)
+        axs[x,y].spines['top'].set_visible(False)
+        # axs[x,y].fill_between(xdata_set[0], min_data, max_data, alpha=.35, facecolor=color, edgecolor=color)
+        axs[x, y].fill_between(xdata_set[0], st_quartile, rd_quartile, alpha=.35, facecolor=color, edgecolor=color)
 
-        plt.plot([], [], color=color, linewidth=1.5, label=labels[i])
-
-    plt.legend(loc=legendloc)
-    plt.savefig(filename)
+    axs[x,y].grid(linestyle='dotted', color='black')
 
 def calculate_mean_min_max(data_set, lim1, lim2):
     mean_data = np.array([]), np.array([])
@@ -90,6 +77,24 @@ def calculate_mean_min_max(data_set, lim1, lim2):
         max_data = np.append(max_data, max(data))
 
     return mean_data, min_data, max_data
+
+def calculate_interquartile_range(data_set, lim1, lim2):
+    mean_data = np.array([]), np.array([])
+    fst_data = np.array([]), np.array([])
+    lst_data  = np.array([]), np.array([])
+
+    for ep in range(data_set[0].size):
+        data = []
+
+        for i in range(len(data_set)):
+            if lim1 <= i < lim2:
+                data.append(data_set[i][ep])
+
+        mean_data = np.append(mean_data, mean(data))
+        fst_data = np.append(fst_data, np.percentile(data, 10))
+        lst_data = np.append(lst_data, np.percentile(data, 90))
+
+    return mean_data, fst_data, lst_data
 
 def write_data(data, folder, dataType):
     f = open(f"{folder}/{dataType}", 'w')

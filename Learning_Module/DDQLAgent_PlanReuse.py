@@ -54,7 +54,7 @@ class DDQLAgent_PlanReuse:
         model.add(Dense(units=self.env.allActionsKeys.size,
                         activation="linear"))
 
-        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=[Recall(), Precision()])
+        model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE), metrics=[Recall(name="recall"), Precision(name="precision")])
 
         return model
 
@@ -65,7 +65,7 @@ class DDQLAgent_PlanReuse:
     def get_qs(self, state):
         return self.model.predict(state.reshape(-1, state.size))[0]
 
-    def train(self):
+    def train(self, reduceactionspace=False):
         if len(self.replay_memory.localBuffer) < MIN_REPLAY_MEMORY_SIZE * (1 - REUSE_RATE):
             return -1, -1, -1
 
@@ -89,7 +89,7 @@ class DDQLAgent_PlanReuse:
 
         for index, (current_state, action, reward, next_state, done) in enumerate(minibatch):
             if not done:
-                legalActionsIds = env_get_legal_actions(next_state)
+                legalActionsIds = env_get_legal_actions(next_state, reduceactionspace)
                 maxAction = legalActionsIds[ np_argmax(next_qs_eval_minibatch[index][legalActionsIds]) ]
                 max_next_q = next_qs_target_minibatch[index][maxAction]
 
@@ -111,7 +111,7 @@ class DDQLAgent_PlanReuse:
         elif not HARD_UPDATE:
             self.soft_update_target_model()
 
-        return history['loss'][0], history['recall_1'][0], history['precision_1'][0]
+        return history['loss'][0], history['recall'][0], history['precision'][0]
 
     def hard_update_target_model(self):
         self.targetModel.set_weights(self.model.get_weights())
