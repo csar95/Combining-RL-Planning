@@ -28,9 +28,11 @@ class Metrics:
             idx = len(self.scores)
 
         average_reward = sum(self.scores[idx-segment:idx]) / len(self.scores[idx-segment:idx])
-        average_length = sum(self.lengths[idx-segment:idx]) / len(self.lengths[idx-segment:idx])
         average_duration = sum(self.durations[idx-segment:idx]) / len(self.durations[idx-segment:idx])
-        average_loss, average_fscore = None, None
+        average_length, average_loss, average_fscore = None, None, None
+
+        if len(self.lengths) > 0:
+            average_length = sum(self.lengths[idx-segment:idx]) / len(self.lengths[idx-segment:idx])
 
         if len(self.avgLoss) > 0:
             suma = list(filter(lambda loss: loss != 0, self.avgLoss[idx-segment:idx]))
@@ -52,7 +54,6 @@ class Metrics:
 
                 avgScores = np.append(avgScores, average_reward)
                 avgLengths = np.append(avgLengths, average_length)
-                # avgDurations = np.append(avgDurations, average_duration if not avgDurations.size else avgDurations[-1] + average_duration)
                 avgDurations = np.append(avgDurations, sum(self.durations[:i]))
                 avgLoss = np.append(avgLoss, average_loss)
                 avgFScore = np.append(avgFScore, average_fscore)
@@ -73,43 +74,37 @@ class Metrics:
             write_data(self.avgFScore, pathtodata, "avgFScore")
 
     @staticmethod
-    def plot_results_for_comparison(figure_name, labels, episodes_set, avg_scores_set, avg_lengths_set, durations_set, avg_loss_set, separators):
+    def plot_results_for_comparison(figure_name, labels, episodes_set, avg_scores_set, durations_set, avg_loss_set, separators):
         pathtofigures = f"{FIGURES_FOLDER}{PROBLEM}/"
         if not os.path.isdir(pathtofigures):
             os.makedirs(pathtofigures)
 
-        fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(16,11))
-        plt.subplots_adjust(top=0.95, bottom=0.09, left=0.065, right=0.97, wspace=0.15, hspace=0.13)
+        fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(24,7))
+        plt.subplots_adjust(top=0.91, bottom=0.13, left=0.04, right=0.98, wspace=0.13)
 
         # LEARNING CURVE --------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(axs, 0, 0, title='Episode reward over time', ylabel='Reward',
+        save_comparison_graph(axs, 0, title='Episode reward over time', xlabel='Episode', ylabel='Reward',
                               xdata_set=episodes_set, ydata_set=avg_scores_set, separators=separators,
-                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[-750, 1250])
+                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[-400, 1400])
 
-        # EPISODES LENGTH -------------------------------------------------------------------------------------------- #
+        # EPISODES DURATION ------------------------------------------------------------------------------------------ #
 
-        save_comparison_graph(axs, 0, 1, title='Episode length over time', ylabel='Solution length',
-                              xdata_set=episodes_set, ydata_set=avg_lengths_set, separators=separators,
-                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[10, 100])  # [20, 160])
+        save_comparison_graph(axs, 1, title='Running time', xlabel='Episode', ylabel='Time (s)',
+                              xdata_set=episodes_set, ydata_set=durations_set, separators=separators,
+                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
+                              ybounds=[0, 1800])
 
         # EPISODES LOSS ---------------------------------------------------------------------------------------------- #
 
-        save_comparison_graph(axs, 1, 0, title='Episode average loss over time', xlabel='Episode', ylabel='Average episode loss',
+        save_comparison_graph(axs, 2, title='Episode average loss over time', xlabel='Episode', ylabel='Average episode loss',
                               xdata_set=episodes_set, ydata_set=avg_loss_set, separators=separators, logscale=True,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
                               ybounds=[min([np.min(loss) for loss in avg_loss_set]), max([np.max(loss) for loss in avg_loss_set])])
 
-        # EPISODES DURATION ------------------------------------------------------------------------------------------ #
-
-        save_comparison_graph(axs, 1, 1, title='Running time', xlabel='Episode', ylabel='Time (s)',
-                                xdata_set=episodes_set, ydata_set=durations_set, separators=separators,
-                                xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
-                                ybounds=[0, 1200])
-
         # Set figure labels and legend
         for i, sp in enumerate(separators):
-            axs[0,0].plot([], [], color=colors_graph[i], linewidth=2, label=labels[i])
+            axs[0].plot([], [], color=colors_graph[i], linewidth=2, label=labels[i])
         fig.legend(loc="lower center", ncol=len(separators), edgecolor="black")
 
         # Save image

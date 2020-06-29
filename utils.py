@@ -27,38 +27,36 @@ colors_graph = ["peru", "purple", "dodgerblue", "dimgrey"]
 def colorPrint(msg, color):
     print(color + msg + RESET)
 
-def set_graph_parameters(axs, x, y, title, xlabel, ylabel, xbounds=None, ybounds=None, logscale=False):
+def set_graph_parameters(axs, pos, title, xlabel, ylabel, xbounds=None, ybounds=None, logscale=False):
     if xbounds is not None:
-        axs[x,y].set_xlim(xbounds)
+        axs[pos].set_xlim(xbounds)
     if ybounds is not None and not logscale:
-        axs[x,y].set_ylim(ybounds)
+        axs[pos].set_ylim(ybounds)
 
-    if xlabel: axs[x,y].set_xlabel(xlabel)
-    else: axs[x,y].set_xticklabels(['','','','','','','','',''])
+    axs[pos].set_xlabel(xlabel, fontsize=13)
+    axs[pos].set_ylabel(ylabel, fontsize=13)
+    axs[pos].set_title(title, fontsize=15, pad=13)
+    axs[pos].yaxis.set_ticks_position('both')
 
-    axs[x,y].set_ylabel(ylabel)
-    axs[x,y].set_title(title)
-    axs[x,y].yaxis.set_ticks_position('both')
-
-def save_comparison_graph(axs, x, y, title, xdata_set, ydata_set, separators, ylabel, xlabel=None, xbounds=None, ybounds=None, logscale=False):
-    set_graph_parameters(axs, x, y, title, xlabel, ylabel, xbounds, ybounds, logscale)
+def save_comparison_graph(axs, pos, title, xdata_set, ydata_set, separators, ylabel, xlabel=None, xbounds=None, ybounds=None, logscale=False):
+    set_graph_parameters(axs, pos, title, xlabel, ylabel, xbounds, ybounds, logscale)
 
     if logscale:
-        axs[x,y].set_yscale('log')
-        axs[x,y].set_yticks(ticks=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
-        axs[x,y].set_yticklabels(labels=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
+        axs[pos].set_yscale('log')
+        axs[pos].set_yticks(ticks=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
+        axs[pos].set_yticklabels(labels=[0.1, 1, int(max([np.max(ydata) for ydata in ydata_set]))+1])
 
     for i, sp in enumerate(separators):
         # mean_data, min_data, max_data = calculate_mean_min_max(ydata_set, separators[i-1] if i > 0 else 0, sp)
         mean_data, st_quartile, rd_quartile = calculate_interquartile_range(ydata_set, separators[i - 1] if i > 0 else 0, sp)
 
         color = colors_graph[i]
-        axs[x,y].plot(xdata_set[0], mean_data, color=color, linewidth=1.2)
-        axs[x,y].spines['top'].set_visible(False)
+        axs[pos].plot(xdata_set[0], mean_data, color=color, linewidth=1.2)
+        axs[pos].spines['top'].set_visible(False)
         # axs[x,y].fill_between(xdata_set[0], min_data, max_data, alpha=.35, facecolor=color, edgecolor=color)
-        axs[x, y].fill_between(xdata_set[0], st_quartile, rd_quartile, alpha=.35, facecolor=color, edgecolor=color)
+        axs[pos].fill_between(xdata_set[0], st_quartile, rd_quartile, alpha=.35, facecolor=color, edgecolor=color)
 
-    axs[x,y].grid(linestyle='dotted', color='black')
+    axs[pos].grid(linestyle='dotted', color='black')
 
 def calculate_mean_min_max(data_set, lim1, lim2):
     mean_data = np.array([]), np.array([])
