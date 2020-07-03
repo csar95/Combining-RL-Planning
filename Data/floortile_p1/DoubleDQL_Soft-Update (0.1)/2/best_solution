@@ -1,0 +1,12 @@
+Length of solution: 9 | Reward: 759 | Real score: 21
+
+Solution:
+(left robot2 tile_2-2 tile_2-1)
+(right robot1 tile_3-1 tile_3-2)
+(paint-up robot1 tile_4-2 tile_3-2 white)
+(change-color robot2 black white)
+(paint-down robot2 tile_1-1 tile_2-1 white)
+(paint-up robot2 tile_3-1 tile_2-1 white)
+(right robot1 tile_3-2 tile_3-3)
+(change-color robot1 white black)
+(paint-down robot1 tile_2-3 tile_3-3 black)

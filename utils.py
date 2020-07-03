@@ -22,6 +22,7 @@ valid = {
 # colors_graph = ["firebrick", "dodgerblue", "darkorchid", "forestgreen"]
 # colors_graph = ["peru", "dimgrey"]
 # colors_graph = ["peru", "purple", "dimgrey"]
+# colors_graph = ["peru", "purple", "dodgerblue", "teal", "dimgrey"]
 colors_graph = ["peru", "purple", "dodgerblue", "dimgrey"]
 
 def colorPrint(msg, color):

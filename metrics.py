@@ -80,20 +80,20 @@ class Metrics:
             os.makedirs(pathtofigures)
 
         fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(24,7))
-        plt.subplots_adjust(top=0.91, bottom=0.13, left=0.04, right=0.98, wspace=0.13)
+        plt.subplots_adjust(top=0.91, bottom=0.14, left=0.04, right=0.98, wspace=0.13)
 
         # LEARNING CURVE --------------------------------------------------------------------------------------------- #
 
         save_comparison_graph(axs, 0, title='Episode reward over time', xlabel='Episode', ylabel='Reward',
                               xdata_set=episodes_set, ydata_set=avg_scores_set, separators=separators,
-                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[-400, 1400])
+                              xbounds=[0, max([np.max(episodes) for episodes in episodes_set])], ybounds=[-400, 800])
 
         # EPISODES DURATION ------------------------------------------------------------------------------------------ #
 
         save_comparison_graph(axs, 1, title='Running time', xlabel='Episode', ylabel='Time (s)',
                               xdata_set=episodes_set, ydata_set=durations_set, separators=separators,
                               xbounds=[0, max([np.max(episodes) for episodes in episodes_set])],
-                              ybounds=[0, 1800])
+                              ybounds=[0, 450])
 
         # EPISODES LOSS ---------------------------------------------------------------------------------------------- #
 
@@ -105,7 +105,7 @@ class Metrics:
         # Set figure labels and legend
         for i, sp in enumerate(separators):
             axs[0].plot([], [], color=colors_graph[i], linewidth=2, label=labels[i])
-        fig.legend(loc="lower center", ncol=len(separators), edgecolor="black")
+        fig.legend(loc="lower center", ncol=len(separators), edgecolor="black", prop={'size': 12})
 
         # Save image
         plt.savefig(f"{pathtofigures}{figure_name}.png")

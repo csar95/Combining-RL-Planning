@@ -47,7 +47,7 @@ class DQNAgent:
     def get_qs(self, state):
         return self.model.predict(state.reshape(-1, state.size))[0]
 
-    def train(self):
+    def train(self, reduceactionspace=False):
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
             return -1, -1, -1
 
@@ -70,7 +70,7 @@ class DQNAgent:
 
         for index, (current_state, action, reward, next_state, done) in enumerate(minibatch):
             if not done:
-                legalActionsIds = env_get_legal_actions(next_state)
+                legalActionsIds = env_get_legal_actions(next_state, reduceactionspace)
                 max_next_q = np_max(next_qs_minibatch[index][legalActionsIds])
 
                 new_q = reward + DISCOUNT * max_next_q

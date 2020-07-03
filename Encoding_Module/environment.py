@@ -154,6 +154,9 @@ class Environment:
 
                     # I don't need to include the immutable predicates to check if an action is legal. I'm already checking those thing here
                     if precondition in self.stateTerms.keys():
+                        if self.stateTerms[precondition] in preconditions:
+                            newActionIsValid = False
+                            break
                         preconditions[ self.stateTerms[precondition] ] = targetValue  # Save the position of the predicate
 
                 if not newActionIsValid:

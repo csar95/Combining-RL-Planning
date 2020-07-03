@@ -7,7 +7,7 @@ DOMAIN = "elevators"
 PROBLEM = "elevators_p2"
 
 # Agent settings
-REPLAY_MEMORY_SIZE = 20_000  # 50_000
+REPLAY_MEMORY_SIZE = 20_000
 MIN_REPLAY_MEMORY_SIZE = 1_000  # Minimum number of steps to start training
 MINIBATCH_SIZE = 64  # The number of samples we use for training
 HARD_UPDATE = True  # True --> Hard update | False --> Soft update
@@ -27,10 +27,10 @@ MIN_EPSILON = 0.0001
 SHOW_STATS_EVERY = 25  # (Episodes)
 
 # Plan reuse settings
-REUSE_RATE = 0.25
+REUSE_RATE = 0
 
-INITIAL_ETA = 0     # 0 ==> REDUCE_ACTION_SPACE = False (Always)
-ETA_DECAY = 1       # 1 + (INITIAL_ETA = 1) ==> REDUCE_ACTION_SPACE = True (Always)
+INITIAL_ETA = 0      # 0 ==> REDUCE_ACTION_SPACE = False (Always)
+ETA_DECAY = 0        # 1 + (INITIAL_ETA = 1) ==> REDUCE_ACTION_SPACE = True (Always)
 MIN_ETA = 0
 
 REDUCE_ACTION_SPACE = False  # False --> Alg. uses full action space

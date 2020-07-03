@@ -1,4 +1,4 @@
-(define (problem transport-city-sequential-40nodes-1000size-4degree-100mindistance-4trucks-16packages-2008seed)
+(define (problem transport-large)
     (:domain transport)
 
     (:objects

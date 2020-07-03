@@ -3,24 +3,24 @@ DATA_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_
 FIGURES_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/"
 MODELS_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Models/"
 
-DOMAIN = "floortile"
-PROBLEM = "floortile_p2"
+DOMAIN = "elevators"
+PROBLEM = "elevators_p2"
 
 # Agent settings
-REPLAY_MEMORY_SIZE = 20_000
+REPLAY_MEMORY_SIZE = 20_000  # 50_000
 MIN_REPLAY_MEMORY_SIZE = 1_000  # Minimum number of steps to start training
 MINIBATCH_SIZE = 64  # The number of samples we use for training
 HARD_UPDATE = False  # True --> Hard update | False --> Soft update
 UPDATE_TARGET_EVERY = 500
-TAU = 0.01
+TAU = 0.005
 DISCOUNT = 0.99
 LEARNING_RATE = 0.001
 
 # Environment settings
-GOAL_REWARD = 750
-EPISODES = 4000
+GOAL_REWARD = 650
+EPISODES = 2000
 MAX_STEP_PER_EPISODE = 100
-EPSILON_DECAY = 0.998
+EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.0001
 # MAX_REWARD = 13
 
