@@ -34,9 +34,9 @@ def set_graph_parameters(axs, pos, title, xlabel, ylabel, xbounds=None, ybounds=
     if ybounds is not None and not logscale:
         axs[pos].set_ylim(ybounds)
 
-    axs[pos].set_xlabel(xlabel, fontsize=13)
-    axs[pos].set_ylabel(ylabel, fontsize=13)
-    axs[pos].set_title(title, fontsize=15, pad=13)
+    axs[pos].set_xlabel(xlabel, fontsize=17)
+    axs[pos].set_ylabel(ylabel, fontsize=17)
+    axs[pos].set_title(title, fontsize=19, pad=13)
     axs[pos].yaxis.set_ticks_position('both')
 
 def save_comparison_graph(axs, pos, title, xdata_set, ydata_set, separators, ylabel, xlabel=None, xbounds=None, ybounds=None, logscale=False):

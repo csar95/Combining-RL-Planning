@@ -4,8 +4,8 @@ from utils import *
 
 if __name__ == '__main__':
     data_folder1 = "DoubleDQL_Soft-Update (0.005)"
-    data_folder2 = "DDQL_2ndEncoding (Z-score norm.)" # "DDQL_PR_3"        "DoubleDQL_Soft-Update (0.01)"  "DoubleDQL_Hard-Update (500)"   "DDQL_PER_0.1"                    "DDQL_2ndEncoding (Z-score norm.)"  "DDQL_PR_1 (0.2)"
-    data_folder3 = "DDQL_2ndEncoding (NO norm.)" # "DDQL_PR_3 (Lite)" "DoubleDQL_Soft-Update (0.1)"   "DoubleDQL_Hard-Update (100)"   "DDQL_PER_0.7"                    "DDQL_2ndEncoding (NO norm.)"       "DDQL_PR_1 (0.8)"
+    data_folder2 = "DDQL_2ndEncoding (Z-score norm.)"        # "DoubleDQL_Soft-Update (0.01)"  "DoubleDQL_Hard-Update (500)"   "DDQL_PER_0.1"                    "DDQL_2ndEncoding (Z-score norm.)"  "DDQL_PR_1 (0.2)"  "DDQL_PR_2 (20000)"
+    data_folder3 = "DDQL_2ndEncoding (NO norm.)" # "DoubleDQL_Soft-Update (0.1)"   "DoubleDQL_Hard-Update (100)"   "DDQL_PER_0.7"                    "DDQL_2ndEncoding (NO norm.)"       "DDQL_PR_1 (0.8)"  "DDQL_PR_2 (2000)"
     data_folder4 = "DDQL_2ndEncoding (Min-Max norm.)" # "DQL"              "DDQL_PR_6"                     "DoubleDQL_Soft-Update (0.5)"   "DoubleDQL_Hard-Update (50)"    "DDQL_PER_0.9"                "DDQL_2ndEncoding (Min-Max norm.)"  "DDQL_PR_1"
 
     # figure_name = "DoubleDQL_Hard-Update"
@@ -15,14 +15,16 @@ if __name__ == '__main__':
     figure_name = "1stEncoding_vs_2ndEncoding"
     # figure_name = "DDQL_vs_DDQL_PR_3_vs_DDQL_PR_3_Lite_vs_DDQL_PR_6"
     # figure_name = "DQL_&_DDQL_Hard-Update"
+    # figure_name = "DDQL_vs_DDQL_PR_1"
 
-    # labels = ["Frecuency = 500", "Frecuency = 100", "Frecuency = 50", "DQL"]
-    # labels = ["TAU = 0.005", "TAU = 0.01", "TAU = 0.1", "TAU = 0.5", "DQL"]
+    # labels = ["DDQL (Frecuency=500)", "DDQL (Frecuency=100)", "DDQL (Frecuency=50)", "DQL"]
+    # labels = ["DDQL (TAU=0.005)", "DDQL (TAU=0.01)", "DDQL (TAU=0.1)", "DDQL (TAU=0.5)", "DQL"]
     # labels = ["Double DQL", "DQL"]
-    # labels = ["Double DQL", "Double DQL w/ PER (a=0.1)", "Double DQL w/ PER (a=0.7)", "Double DQL w/ PER (a=0.9)"]
+    # labels = ["Double DQL", "Double DQL w/ PER (alpha=0.1)", "Double DQL w/ PER (alpha=0.7)", "Double DQL w/ PER (alpha=0.9)"]
     labels = ["DDQL (Binary encoding)", "DDQL (Non-binary encoding - Z-score)", "DDQL (Non-binary encoding - No norm.)", "DDQL (Non-binary encoding - Min-Max)"]
-    # labels = ["Double DQL", "DDQL w/ Plan Reuse (1 - Reuse = 0.2)", "DDQL w/ Plan Reuse (1 - Reuse = 0.8)"]
-    # labels = ["Double DQL", "DDQL w/ Plan Reuse (3)", "DDQL w/ Plan Reuse (3 - Lite)", "DDQL w/ Plan Reuse (6)"]
+    # labels = ["Double DQL", "DDQL w/ Plan Reuse (1st approach - Rate=0.2)", "DDQL w/ Plan Reuse (1st approach - Rate=0.8)"]
+    # labels = ["Double DQL", "DDQL w/ Plan Reuse (2nd - Replay mem. size = 20000)", "DDQL w/ Plan Reuse (2nd - Replay mem. size = 2000)"]
+    # labels = ["Double DQL", "DDQL w/ Plan Reuse (3rd approach)", "DDQL w/ Plan Reuse (3rd approach - Lite)", "DDQL w/ Plan Reuse (6)"]
 
     episodes_set, avg_scores_set, avg_durations_set, avg_loss_set = [], [], [], []
 
