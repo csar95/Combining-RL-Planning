@@ -4,9 +4,10 @@ from hyperparameters import *
 import time
 import numpy as np
 import os
+from os.path import join
 
 
-def deep_q_learning_alg(env, agent, idx, folder, initialeta=INITIAL_ETA, mineta=MIN_ETA, etadecay=ETA_DECAY):
+def deep_q_learning_alg(env, agent, idx, folder, initialeta=INITIAL_ETA, mineta=MIN_ETA, etadecay=ETA_DECAY, directory=None, problemfilename=None):
     np_argmax = np.argmax
     np_random_number = np.random.random
 
@@ -80,10 +81,13 @@ def deep_q_learning_alg(env, agent, idx, folder, initialeta=INITIAL_ETA, mineta=
             eta *= etadecay
 
     # Create models folder
-    pathtomodel = f"{MODELS_FOLDER}{PROBLEM}/{folder}"
+    pathtomodel = f"{MODELS_FOLDER}{PROBLEM}/{folder}" if not directory else directory
     if not os.path.isdir(pathtomodel):
         os.makedirs(pathtomodel)
-    agent.model.save_weights(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
+    if not directory:
+        agent.model.save_weights(f'{pathtomodel}/{PROBLEM}-{idx}.h5')
+    else:
+        agent.model.save_weights(join(pathtomodel, f"{problemfilename}.h5"))
 
     return exp_results
 

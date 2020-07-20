@@ -15,7 +15,7 @@ if __name__ == '__main__':
     folder = "test"
 
     env = Environment()
-    env.get_previous_plans(reduceactionspace=True)  #  True ==> 3rd & 6th approaches
+    # env.get_previous_plans(reduceactionspace=True)  #  True ==> 3rd & 6th approaches
 
     # agent = DQNAgent(env)
     agent = DDQNAgent(env)

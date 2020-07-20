@@ -35,3 +35,4 @@ optional arguments:\
 &nbsp;&nbsp;&nbsp;-p PASTPLANS, --pastplans PASTPLANS\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Path to directory with past plans
 
+The rest of the parameters are read from the __hyperparameters.py__ file.

@@ -13,6 +13,7 @@ from utils import *
 
 from argparse import ArgumentParser
 from pathlib import Path
+from os.path import join
 
 
 if __name__ == '__main__':
@@ -20,8 +21,9 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("domain", help="Path to the domain file.", type=Path)
     parser.add_argument("problem", help="Path to the target problem file.", type=Path)
+    parser.add_argument("directory", help="Path to the directory where data will be stored.", type=Path)
     parser.add_argument("-t", "--agenttype", default="DDQL", help="Type of agent. Possible values: ['DQL', 'DDQL', 'DDQL_PlanReuse', 'DDQL_PER']", type=str)
-    parser.add_argument("-o", "--option", default=4, help="ID of an approach devised to leverage prior knowledge", type=int)
+    parser.add_argument("-o", "--option", default=None, help="ID of an approach devised to leverage prior knowledge", type=int)
     parser.add_argument("-i", "--initialeta", default=0.0, help="Initial value of eta (4th approach plan DDQL_PlanReuse)", type=float)
     parser.add_argument("-d", "--decayeta", default=0.0, help="Decay factor for eta (4th approach plan DDQL_PlanReuse)", type=float)
     parser.add_argument("-m", "--mineta", default=0.0, help="Minimum value of eta (4th approach plan DDQL_PlanReuse)", type=float)
@@ -29,28 +31,25 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if not args.domain.exists() or not args.problem.exists():
+    if not args.domain.exists() or not args.problem.exists() or not args.directory.exists():
         colorPrint("Invalid path to domain or target problem file.", RED)
         exit(1)
 
     if args.agenttype == 'DDQL_PlanReuse' and not args.pastplans:
-        colorPrint("You must add the path to past plans to be able to run this agent.", RED)
+        colorPrint("You must add the path to past plans to be able to run agent 'DDQL_PlanReuse'.", RED)
         exit(1)
 
     if args.pastplans and not args.pastplans.exists():
         colorPrint("Invalid path to past plans.", RED)
         exit(1)
 
-    if args.option != 4 and args.agenttype != 'DDQL_PlanReuse':
-        colorPrint("Invalid option for plan reuse.", RED)
+    if args.option and args.agenttype != 'DDQL_PlanReuse':
+        colorPrint("Invalid option for plan reuse. You must select: -t --agenttype 'DDQL_PlanReuse'", RED)
         exit(1)
 
-    if args.option != 4 and (args.initialeta != 0.0 or args.decayeta != 0.0 or args.mineta != 0.0):
+    if (args.option != 4 or args.agenttype != 'DDQL_PlanReuse') and (args.initialeta != 0.0 or args.decayeta != 0.0 or args.mineta != 0.0):
         colorPrint("The arguments related to the parameter eta are associated with the 4th approach (DDQL_PlanReuse)", RED)
         exit(1)
-
-    idx = 99
-    folder = "test"
 
     ### 1. ENCODING MODULE
     env = Environment(pathtodomain=args.domain, pathtoproblem=args.problem, pathtopastplans=args.pastplans)
@@ -88,18 +87,22 @@ if __name__ == '__main__':
         msg += f" | Initial eta: {args.initialeta} , Decay factor eta: {args.decayeta} , Min. eta: {args.mineta}"
     colorPrint(msg, MAGENTA)
 
-    ### 2. LEARNING MODULE
-    exp_results = deep_q_learning_alg(env, agent, idx, folder, initialeta=args.initialeta, mineta=args.mineta,
-                                      etadecay=args.decayeta) if args.agenttype != 'DDQL_PER' else \
-                  deep_q_learning_alg_per(env, agent, idx, folder, a=ALPHA_PER)
+    problemFileName = Path(args.problem).name.split('.')[0]
 
-    exp_results.save_data(folder, idx)
+    ### 2. LEARNING MODULE
+    exp_results = deep_q_learning_alg(env, agent, 99, None, initialeta=args.initialeta, mineta=args.mineta,
+                                      etadecay=args.decayeta, directory=args.directory, problemfilename=problemFileName) \
+        if args.agenttype != 'DDQL_PER' \
+        else deep_q_learning_alg_per(env, agent, 99, None, a=ALPHA_PER, directory=args.directory, problemfilename=problemFileName)
+
+    exp_results.save_data(None, 99, directory=args.directory)
 
     ### 3. PLANNING MODULE
-    planner = Planner(env, pathtomodel=f"{MODELS_FOLDER}{PROBLEM}/{folder}/{PROBLEM}-{idx}.h5",
+    planner = Planner(env, pathtomodel=join(args.directory, f"{problemFileName}.h5"),
                       reduceactionspace=True if args.option == 3 else False)
 
-    solution, score, finished = get_plan(env, agent, reduceactionspace=True if args.option == 3 else False) if args.agenttype != 'DDQL_PER' else \
-                                get_plan_per(env, agent)
+    solution, score, finished = get_plan(env, agent, reduceactionspace=True if args.option == 3 else False) \
+        if args.agenttype != 'DDQL_PER' \
+        else get_plan_per(env, agent)
 
-    planner.save_plan(solution, pathtodata=f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}")
+    planner.save_plan(solution, pathtodata=join(args.directory, "data"))

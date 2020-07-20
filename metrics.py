@@ -3,6 +3,7 @@ from utils import *
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from os.path import join
 
 
 class Metrics:
@@ -60,8 +61,8 @@ class Metrics:
 
         return np.arange(SHOW_STATS_EVERY, avgScores.size * SHOW_STATS_EVERY + SHOW_STATS_EVERY, step=SHOW_STATS_EVERY), avgScores, avgLengths, avgDurations, avgLoss, avgFScore
 
-    def save_data(self, folder, idx):
-        pathtodata = f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}"
+    def save_data(self, folder, idx, directory=None):
+        pathtodata = f"{DATA_FOLDER}{PROBLEM}/{folder}/{idx}" if not directory else join(directory, "data")
         if not os.path.isdir(pathtodata):
             os.makedirs(pathtodata)
 
