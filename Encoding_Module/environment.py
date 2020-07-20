@@ -13,7 +13,11 @@ class Environment:
     domainPath = RESOURCES_FOLDER + DOMAIN + ".pddl"
     problemPath = RESOURCES_FOLDER + PROBLEM + ".pddl"
 
-    def __init__(self):
+    def __init__(self, pathtodomain=None, pathtoproblem=None, pathtopastplans=None):
+        if pathtodomain: self.domainPath = pathtodomain
+        if pathtoproblem: self.problemPath = pathtoproblem
+        self.pastPlansPath = pathtopastplans if pathtopastplans else None
+
         self.objIndependentPreds = set([])
         self.objDependentPreds = set([])
         self.immutablePreds = set([])
@@ -283,7 +287,7 @@ class Environment:
     we are taking into consideration
     '''
     def get_previous_plans(self, reduceactionspace=False):
-        path = RESOURCES_FOLDER + "Solutions/" + PROBLEM
+        path = self.pastPlansPath if self.pastPlansPath else RESOURCES_FOLDER + "Solutions/" + PROBLEM
 
         if reduceactionspace:
             reducedAllActionsKeys = get_reduce_action_space(path)

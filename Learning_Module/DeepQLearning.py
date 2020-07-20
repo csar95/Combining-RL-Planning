@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 
-def deep_q_learning_alg(env, agent, idx, folder):
+def deep_q_learning_alg(env, agent, idx, folder, initialeta=INITIAL_ETA, mineta=MIN_ETA, etadecay=ETA_DECAY):
     np_argmax = np.argmax
     np_random_number = np.random.random
 
@@ -20,7 +20,7 @@ def deep_q_learning_alg(env, agent, idx, folder):
     env_get_legal_actions = env.get_legal_actions
 
     epsilon = 1  # Going to be decayed
-    eta = INITIAL_ETA
+    eta = initialeta
     exp_results = Metrics()
 
     for episode in range(1, EPISODES+1):
@@ -76,8 +76,8 @@ def deep_q_learning_alg(env, agent, idx, folder):
             epsilon *= EPSILON_DECAY
 
         # Decay eta
-        if eta > MIN_ETA:
-            eta *= ETA_DECAY
+        if eta > mineta:
+            eta *= etadecay
 
     # Create models folder
     pathtomodel = f"{MODELS_FOLDER}{PROBLEM}/{folder}"

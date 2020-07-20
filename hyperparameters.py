@@ -1,4 +1,4 @@
-RESOURCES_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Encoding_Module/Resources/"
+RESOURCES_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Resources/"
 DATA_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Data/"
 FIGURES_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Figures/"
 MODELS_FOLDER = "/Users/csr95/Desktop/MSc_Artificial_Intelligence_HWU/MSc_Project_Dissertation/Combining-RL-Planning/Models/"
@@ -15,6 +15,7 @@ UPDATE_TARGET_EVERY = 500
 TAU = 0.005
 DISCOUNT = 0.99
 LEARNING_RATE = 0.001
+ALPHA_PER = 0.7  # Only applies to the RL alg. DDQL_PER
 
 # Environment settings
 GOAL_REWARD = 650
@@ -22,18 +23,18 @@ EPISODES = 2000
 MAX_STEP_PER_EPISODE = 100
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.0001
-# MAX_REWARD = 13
 
-SHOW_STATS_EVERY = 25  # (Episodes)
+REUSE_RATE = 0  # Only applies to the 1st appraoch (DDQL_PlanReuse)
 
-# Plan reuse settings
-REUSE_RATE = 0
-
+### DDQL_PlanReuse
 INITIAL_ETA = 0      # 0 ==> REDUCE_ACTION_SPACE = False (Always)
 ETA_DECAY = 0        # 1 + (INITIAL_ETA = 1) ==> REDUCE_ACTION_SPACE = True (Always)
 MIN_ETA = 0
 
 REDUCE_ACTION_SPACE = False  # False --> Alg. uses full action space
-                             # True --> Alg. filters legal actions with the ones appearing on the prior plans whenever it's possible, otherwise it uses the full action space
+                             # True --> Alg. filters legal actions with the ones appearing on the prior plans whenever
+                             #          it's possible, otherwise it uses the full action space
 
+### Advanced settings
+SHOW_STATS_EVERY = 25  # (Episodes)
 MAX_STEPS_PLANNER = 40
