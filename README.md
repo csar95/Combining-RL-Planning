@@ -41,19 +41,19 @@ optional arguments:\
 
 ------------------------------------ USE EXAMPLES -------------------------------------
 
-*Double DQN algorithm*:
+*Double DQN algorithm*:\
 &nbsp;./RL_Planning.py Resources/elevators.pddl Resources/elevators_p2.pddl ./
 
-*DQN algorithm*:
+*DQN algorithm*:\
 &nbsp;./RL_Planning.py Resources/floortile.pddl Resources/floortile_p1.pddl ./ -t DQL
 
-*Double DQN algorithm w/ PER*:
+*Double DQN algorithm w/ PER*:\
 &nbsp;./RL_Planning.py Resources/transport.pddl Resources/transport_p2.pddl ./ -t DDQL_PER
 
-*Double DQN algorithm w/ Plan reuse (1-3)*:
+*Double DQN algorithm w/ Plan reuse (1-3)*:\
 &nbsp;./RL_Planning.py Resources/elevators.pddl Resources/elevators_p5.pddl ./ -t DDQL_PlanReuse -o 1 -p Resources/Solutions/elevators_p5_lite/
 
-*Double DQN algorithm w/ Plan reuse (4)*:
+*Double DQN algorithm w/ Plan reuse (4)*:\
 &nbsp;./RL_Planning.py Resources/transport.pddl Resources/transport_p3.pddl ./ -t DDQL_PlanReuse -o 4 -p Resources/Solutions/transport_p3_full/ -i 0.95 -d 0.998 -m 0
 
 --------------------------- DOMAIN AND PROBLEM REQUIREMENTS ---------------------------
