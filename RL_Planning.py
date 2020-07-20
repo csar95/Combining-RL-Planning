@@ -31,8 +31,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if not args.domain.exists() or not args.problem.exists() or not args.directory.exists():
-        colorPrint("Invalid path to domain or target problem file.", RED)
+    if not args.domain.exists():
+        colorPrint("Invalid path to domain file.", RED)
+        exit(1)
+    if not args.problem.exists():
+        colorPrint("Invalid path to target problem file.", RED)
+        exit(1)
+    if not args.directory.exists():
+        colorPrint("Invalid path to data directory.", RED)
         exit(1)
 
     if args.agenttype == 'DDQL_PlanReuse' and not args.pastplans:
